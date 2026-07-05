@@ -1,0 +1,236 @@
+import os
+import math
+import psycopg2
+from psycopg2.extras import DictCursor
+import pandas as pd
+
+# Cấu hình chuỗi kết nối tới Neon DB (Thay bằng biến môi trường của bạn)
+DATABASE_URL = "postgresql://neondb_owner:npg_WtqHZU8VIAz4@ep-lucky-flower-at6syakw-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+CODEC_MAPPING = {
+    'sbc' : 1, 'aac' : 2, 'aptx hd' : 3, 'aptx adaptive' : 4, 'ldac' : 5, 'ldhc' : 5
+}
+def init_database():
+    """Khởi tạo cấu trúc bảng dựa trên schema của bạn"""
+    print("[-] Đang kết nối và khởi tạo cấu trúc bảng trên cloud...")
+    
+    # Thêm lệnh DROP TABLE ở đầu để làm sạch cấu trúc cũ, giữ nguyên comment của bạn
+    schema_sql = """
+    DROP TABLE IF EXISTS specs_tws CASCADE;
+    DROP TABLE IF EXISTS specs_wired CASCADE;
+    DROP TABLE IF EXISTS specs_speakers CASCADE;
+    DROP TABLE IF EXISTS audio_products CASCADE;
+    DROP TABLE IF EXISTS categories CASCADE;
+
+    -- 1. Bảng danh mục để phân loại thiết bị
+    CREATE TABLE categories (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE -- Thêm UNIQUE để tránh trùng lặp danh mục
+    );
+
+    -- 2. Bảng sản phẩm gốc (Chứa thông tin chung)
+    CREATE TABLE audio_products (
+        id SERIAL PRIMARY KEY,
+        category_id INT REFERENCES categories(id),
+        model_name VARCHAR(100) NOT NULL,
+        brand VARCHAR(50) NOT NULL,
+        price_vnd INT NOT NULL,
+        sound_signature VARCHAR(30), -- Bass-heavy, Neutral, V-Shape, Warm
+        review_summary TEXT
+    );
+
+    -- 3. Bảng thông số riêng cho Tai nghe không dây (TWS)
+    CREATE TABLE specs_tws (
+        product_id INT PRIMARY KEY REFERENCES audio_products(id) ON DELETE CASCADE,
+        anc_depth_db INT DEFAULT 0,
+        battery_life_total INT,
+        codec_score INT -- SBC=1, AAC=2, aptX=3, LDAC=5
+    );
+
+    -- 4. Bảng thông số riêng cho Tai nghe có dây (Wired)
+    CREATE TABLE specs_wired (
+        product_id INT PRIMARY KEY REFERENCES audio_products(id) ON DELETE CASCADE,
+        impedance_ohm INT, -- Trở kháng (Ví dụ: 16, 32, 80 Ohm)
+        sensitivity_db INT, -- Độ nhạy
+        connector_type VARCHAR(20) -- 3.5mm, Type-C, 2-pin, MMCX
+    );
+
+    -- 5. Bảng thông số riêng cho Loa (Speakers)
+    CREATE TABLE specs_speakers (
+        product_id INT PRIMARY KEY REFERENCES audio_products(id) ON DELETE CASCADE,
+        power_watts INT, -- Công suất (Ví dụ: 20W, 40W, 100W)
+        connection_type VARCHAR(50), -- Bluetooth, AUX, Optical, RCA
+        speaker_type VARCHAR(30) -- Portable (Di động), Bookshelf, Soundbar
+    );
+    """
+    
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor()
+        cur.execute(schema_sql)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("[✓] Khởi tạo cấu trúc bảng thành công!")
+    except Exception as e:
+        print(f"[X] Lỗi khởi tạo Database: {e}")
+
+def clean_val(val, target_type=str):
+    """Hàm bổ trợ để dọn dẹp giá trị NaN từ Pandas sang None (NULL trong SQL)"""
+    if pd.isna(val) or val == "" or (isinstance(val, float) and math.isnan(val)):
+        return None
+    try:
+        return target_type(val)
+    except:
+        return None
+
+def migration_data():
+    """Bóc tách dữ liệu từ CSV và phân phối vào các bảng quan hệ tương ứng"""
+    filename = "audio_gear.csv"
+    
+    # 1. Kiểm tra chính xác bản chất file bằng 4 byte đầu tiên (Magic Bytes)
+    is_excel = False
+    try:
+        with open(filename, "rb") as f:
+            start_bytes = f.read(4)
+            if start_bytes == b"PK\x03\x04": # Chữ ký chuẩn của file Excel/Zip
+                is_excel = True
+    except FileNotFoundError:
+        print(f"[X] Lỗi: Không tìm thấy file '{filename}' trong thư mục này!")
+        return
+
+    # 2. Tiến hành đọc file theo đúng định dạng thực tế của nó
+    if is_excel:
+        print("[-] Phát hiện 'audio_gear.csv' thực chất là file Excel (.xlsx). Đang đọc bằng bộ mã Excel...")
+        try:
+            df = pd.read_excel(filename, engine="openpyxl")
+        except ImportError:
+            print("[X] Lỗi: Thiếu thư viện 'openpyxl' để đọc file Excel.")
+            print("[>] Vui lòng chạy lệnh này ngoài terminal: pip install openpyxl")
+            return
+        except Exception as e:
+            print(f"[X] Không thể đọc file Excel: {e}")
+            return
+    else:
+        print("[-] Đang đọc file 'audio_gear.csv' dưới dạng CSV thô...")
+        try:
+            df = pd.read_csv(filename, encoding="utf-8-sig", sep=None, engine='python', on_bad_lines='skip')
+        except Exception:
+            try:
+                df = pd.read_csv(filename, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
+            except Exception as e:
+                print(f"[X] Không thể đọc file CSV: {e}")
+                return
+
+    # 3. Chuẩn hóa tên cột về chữ thường và xóa khoảng trắng thừa
+    df.columns = df.columns.str.strip().str.lower()
+    print("[+] Các cột tìm thấy trong file:", df.columns.tolist())
+    
+    # Kiểm tra cột bắt buộc
+    if 'category' not in df.columns:
+        print(f"[X] Lỗi: File dữ liệu thiếu hẳn cột 'category'. Các cột hiện tại: {df.columns.tolist()}")
+        return
+
+    print("[-] Đang bóc tách dữ liệu từ file để đẩy lên Cloud...")
+
+    # Chuẩn hóa tên cột về chữ thường và xóa khoảng trắng thừa
+    df.columns = df.columns.str.strip().str.lower()
+    
+    # ... Các đoạn code xử lý dữ liệu và đẩy lên DB phía dưới giữ nguyên 100% ...
+
+    # Chuẩn hóa tên cột về chữ thường và xóa khoảng trắng thừa
+    df.columns = df.columns.str.strip().str.lower()
+    
+    # Kiểm tra cột bắt buộc
+    if 'category' not in df.columns:
+        print(f"[X] Lỗi: File CSV thiếu cột 'category'. Các cột hiện tại: {df.columns.tolist()}")
+        return
+
+    print("[-] Đang bóc tách dữ liệu từ file CSV để đẩy lên Cloud...")
+    
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cur = conn.cursor(cursor_factory=DictCursor)
+        
+        success_count = 0
+
+        for _, row in df.iterrows():
+            # 1. Xử lý phần Category danh mục
+            cat_raw = clean_val(row.get('category'))
+            if not cat_raw:
+                continue # Bỏ qua nếu dòng này không có danh mục
+            
+            # Chuẩn hóa đầu vào danh mục trùng khớp với comment thiết kế của bạn
+            cat_name = cat_raw.strip()
+            if cat_name.lower() in ['tws', 'tai nghe không dây']:
+                cat_name = 'TWS'
+            elif cat_name.lower() in ['wired earphone', 'wired', 'tai nghe có dây']:
+                cat_name = 'Wired Earphone'
+            elif cat_name.lower() in ['speaker', 'loa']:
+                cat_name = 'Speaker'
+
+            # Tìm hoặc tạo mới Category ID
+            cur.execute("INSERT INTO categories (name) VALUES (%s) ON CONFLICT (name) DO NOTHING;", (cat_name,))
+            cur.execute("SELECT id FROM categories WHERE name = %s;", (cat_name,))
+            category_id = cur.fetchone()['id']
+
+            # 2. Chèn vào bảng sản phẩm gốc audio_products
+            model_name = clean_val(row.get('model_name'))
+            brand = clean_val(row.get('brand'), str) or "Unknown"
+            price_vnd = clean_val(row.get('price_vnd'), int) or 0
+            sound_sig = clean_val(row.get('sound_signature'))
+            review_sum = clean_val(row.get('review_summary'))
+
+            if not model_name:
+                continue # Bỏ qua nếu không có tên sản phẩm
+
+            insert_product_sql = """
+            INSERT INTO audio_products (category_id, model_name, brand, price_vnd, sound_signature, review_summary)
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
+            """
+            cur.execute(insert_product_sql, (category_id, model_name, brand, price_vnd, sound_sig, review_sum))
+            product_id = cur.fetchone()['id']
+
+            # 3. Rẽ nhánh chèn thông số kỹ thuật đặc trưng dựa vào Category
+            if cat_name == 'TWS':
+                anc = clean_val(row.get('anc_depth_db'), int) or 0
+                battery = clean_val(row.get('battery_life_total'), int)
+                codec = clean_val(row.get('codec_score'), int)
+                
+                cur.execute(
+                    "INSERT INTO specs_tws (product_id, anc_depth_db, battery_life_total, codec_score) VALUES (%s, %s, %s, %s);",
+                    (product_id, anc, battery, codec)
+                )
+
+            elif cat_name == 'Wired Earphone':
+                impedance = clean_val(row.get('impedance_ohm'), int)
+                sensitivity = clean_val(row.get('sensitivity_db'), int)
+                connector = clean_val(row.get('connector_type'))
+                
+                cur.execute(
+                    "INSERT INTO specs_wired (product_id, impedance_ohm, sensitivity_db, connector_type) VALUES (%s, %s, %s, %s);",
+                    (product_id, impedance, sensitivity, connector)
+                )
+
+            elif cat_name == 'Speaker':
+                power = clean_val(row.get('power_watts'), int)
+                connection = clean_val(row.get('connection_type'))
+                speaker_type = clean_val(row.get('speaker_type'))
+                
+                cur.execute(
+                    "INSERT INTO specs_speakers (product_id, power_watts, connection_type, speaker_type) VALUES (%s, %s, %s, %s);",
+                    (product_id, power, connection, speaker_type)
+                )
+                
+            success_count += 1
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[✓] Đồng bộ dữ liệu thành công! Đã đẩy {success_count} sản phẩm lên Neon Cloud DB.")
+
+    except Exception as e:
+        print(f"[X] Lỗi trong quá trình Migration dữ liệu: {e}")
+
+if __name__ == "__main__":
+    init_database()
+    migration_data()
