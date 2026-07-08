@@ -20,25 +20,36 @@ class AudioRecommender:
             return (x_max - series) / (x_max - x_min)
 
     def redistribute_weights(self, base_weights, target_key, new_value):
-        """ Thuật toán tái phân phối trọng số động (Khấu trừ đều) """
+        """ 
+        Thuật toán tái phân phối trọng số động (Bảo toàn tỷ lệ)
+        Đảm bảo tổng luôn bằng 1.0 và giữ nguyên giá trị new_value của slider mục tiêu
+        """
         weights = base_weights.copy()
         if target_key not in weights:
             return weights
         
-        old_value = weights[target_key]
-        delta = new_value - old_value
-        other_keys = [k for k in weights.keys() if k != target_key]
+        # Đảm bảo giá trị mới nằm trong khoảng an toàn [0, 1]
+        new_value = max(0.0, min(1.0, float(new_value)))
+        weights[target_key] = new_value
         
+        other_keys = [k for k in weights.keys() if k != target_key]
         if not other_keys:
             weights[target_key] = 1.0
             return weights
             
-        deduction = delta / len(other_keys)
-        for k in other_keys:
-            weights[k] = max(0.0, weights[k] - deduction)
-            
-        weights[target_key] = new_value
+        remaining_sum = 1.0 - new_value
+        other_sum = sum(base_weights[k] for k in other_keys)
         
+        if other_sum > 0:
+            # Phân bổ tỷ lệ thuận theo giá trị cũ của các slider còn lại
+            for k in other_keys:
+                weights[k] = (base_weights[k] / other_sum) * remaining_sum
+        else:
+            # Nếu tất cả các slider còn lại đều bằng 0, thực hiện chia đều phần còn lại
+            for k in other_keys:
+                weights[k] = remaining_sum / len(other_keys)
+                
+        # Khử sai số dấu phẩy động của máy tính để làm tròn tuyệt đối về 1.0
         total = sum(weights.values())
         if abs(total - 1.0) > 1e-6:
             for k in weights.keys():
@@ -121,11 +132,8 @@ class AudioRecommender:
         }
         return ip_mapping.get(str(ip_rating).strip(), 0.0)
 
-    # --- SỬA LỖI THIẾU SELF VÀ CHUẨN HÓA ĐẦU RA CHO HỆ CHUYÊN GIA ---
     def generate_driving_advices(self, impedance: float, sensitivity: float) -> dict:
-        """
-        Hệ chuyên gia phân tích trở kháng & độ nhạy (Chỉ xuất metadata khuyên dùng, KHÔNG CHẤM ĐIỂM)
-        """
+        """Hệ chuyên gia phân tích trở kháng & độ nhạy (Chỉ xuất metadata tư vấn)"""
         imp_val = float(impedance)
         sens_val = float(sensitivity) if pd.notna(sensitivity) and sensitivity > 0 else 100.0
 
@@ -153,52 +161,73 @@ class AudioRecommender:
         if df_tws.empty: return df_tws
 
         df_tws["S_battery"] = self.normalize_min_max(df_tws["battery_life_total"], higher_is_better=True)
-        df_tws["S_price"] = self.normalize_min_max(df_tws["avg_prive_vnd"], higher_is_better=False)
+        df_tws["S_price"] = self.normalize_min_max(df_tws["avg_price_vnd"], higher_is_better=False)
         df_tws["S_codec"] = self.normalize_min_max(df_tws["codec_score"], higher_is_better=True)
         df_tws["S_ip"] = df_tws["ip_rating"].apply(self._get_ip_score)
         df_tws["S_sound"] = df_tws["sound_signature"].apply(lambda x: self._calculate_sound_match(x, user_pref))
 
+        # --- ĐỔI MỚI LOGIC CHẤM ĐIỂM ANC ---
         anc_scores = []
-        for _, row in df_tws.iterrows():
-            if str(row.get("anc_type")).strip().lower() == "none" or row["anc_depth_db"] == 0:
-                anc_scores.append(0.0)
-            elif str(row.get("anc_type")).strip().lower() == "adaptive" and row["anc_depth_db"] == 1:
-                anc_scores.append(0.80)
-            else:
-                anc_scores.append(row["anc_depth_db"])
-        df_tws["S_anc"] = self.normalize_min_max(pd.Series(anc_scores, index=df_tws.index), higher_is_better=True)
+        # Lọc danh sách thiết bị có chống ồn dạng cố định (fixed/standard) để tìm biên độ chia điểm số
+        fixed_mask = (~df_tws["anc_type"].astype(str).str.strip().str.lower().isin(["none", "adaptive"])) & (df_tws["anc_depth_db"] > 0)
+        fixed_devices = df_tws[fixed_mask]
+        
+        min_fixed = fixed_devices["anc_depth_db"].min() if not fixed_devices.empty else 0
+        max_fixed = fixed_devices["anc_depth_db"].max() if not fixed_devices.empty else 0
 
-        weights = custom_weights if custom_weights else {
+        for _, row in df_tws.iterrows():
+            anc_type = str(row.get("anc_type", "None")).strip().lower()
+            anc_depth = float(row.get("anc_depth_db", 0))
+            
+            if anc_type == "none" or anc_depth == 0:
+                anc_scores.append(0.0)
+            elif anc_type == "adaptive":
+                anc_scores.append(0.8)  # Cố định mức 0.8 cho Adaptive ANC theo yêu cầu
+            else:
+                # Dành cho Fixed ANC: Chuẩn hóa đưa về không gian [0.4, 1.0] để luôn vượt trội hơn mức None (0.0)
+                if max_fixed == min_fixed:
+                    anc_scores.append(0.7)
+                else:
+                    score = 0.4 + 0.6 * (anc_depth - min_fixed) / (max_fixed - min_fixed)
+                    anc_scores.append(score)
+                    
+        df_tws["S_anc"] = pd.Series(anc_scores, index=df_tws.index)
+
+        # Mẫu trọng số mặc định của hệ thống
+        default_weights = {
             "w_sound": 0.25, "w_anc": 0.20, "w_battery": 0.15, 
             "w_codec": 0.10, "w_ip": 0.10, "w_price": 0.20
         }
 
+        # --- CHUẨN HÓA TRỌNG SỐ TỪ FRONTEND VỀ TỔNG 1.0 ---
+        if custom_weights:
+            total_w = sum(custom_weights.values())
+            if total_w > 0:
+                weights = {k: float(v) / total_w for k, v in custom_weights.items()}
+            else:
+                weights = default_weights
+        else:
+            weights = default_weights
+
         df_tws["Final_score"] = (
-            (weights["w_sound"] * df_tws["S_sound"]) +
-            (weights["w_anc"] * df_tws["S_anc"]) +
-            (weights["w_battery"] * df_tws["S_battery"]) +
-            (weights["w_codec"] * df_tws["S_codec"]) +
-            (weights["w_ip"] * df_tws["S_ip"]) +
-            (weights["w_price"] * df_tws["S_price"])
+            (weights.get("w_sound", 0) * df_tws["S_sound"]) +
+            (weights.get("w_anc", 0) * df_tws["S_anc"]) +
+            (weights.get("w_battery", 0) * df_tws["S_battery"]) +
+            (weights.get("w_codec", 0) * df_tws["S_codec"]) +
+            (weights.get("w_ip", 0) * df_tws["S_ip"]) +
+            (weights.get("w_price", 0) * df_tws["S_price"])
         )
         return df_tws.sort_values(by="Final_score", ascending=False)
 
-    # --- REFACTOR TOÀN DIỆN HÀM SCORE_WIRED (BÓC TÁCH NỘI TRỞ) ---
     def score_wired(self, user_pref, custom_weights=None):
-        """Hệ thống chấm điểm chuẩn hóa cho Tai nghe dây - Đã cô lập hoàn toàn nội trở khỏi toán học xếp hạng"""
         df_wired = self.df[self.df["category"] == "Wired"].copy()
         if df_wired.empty: return df_wired
 
-        # 1. Tính toán cấu phần âm học cốt lõi (Tuning & Driver cứng)
         df_wired["S_tuning"] = df_wired["sound_signature"].apply(lambda x: self._calculate_sound_match(x, user_pref))
         df_wired["S_driver"] = df_wired.apply(self.get_comprehensive_driver_score, axis=1)
         df_wired["S_sound_total"] = (df_wired["S_tuning"] * 0.60) + (df_wired["S_driver"] * 0.40)
-        
-        # 2. Tính toán cấu phần giá thành P/P
-        df_wired["S_price"] = self.normalize_min_max(df_wired["avg_prive_vnd"], higher_is_better=False)
+        df_wired["S_price"] = self.normalize_min_max(df_wired["avg_price_vnd"], higher_is_better=False)
 
-        # 3. KÍCH HOẠT HỆ CHUYÊN GIA ĐỂ TRÍCH XUẤT METADATA TƯ VẤN (Không nhân với trọng số)
-        # Sửa lỗi gọi tên linh hoạt giữa 'sensitivity_db' và 'sensity_db' phòng hờ lỗi DB
         df_wired["Driving_Advice"] = df_wired.apply(
             lambda r: self.generate_driving_advices(
                 r["impedance_ohm"], 
@@ -206,15 +235,21 @@ class AudioRecommender:
             ), axis=1
         )
 
-        # 4. Thiết lập lại Trọng số (Loại bỏ w_impedance, phân bổ lại tỷ lệ vàng: Sound 65% - Price 35%)
-        weights = custom_weights if custom_weights else {
-            "w_sound": 0.65, "w_price": 0.35
-        }
+        default_weights = {"w_sound": 0.65, "w_price": 0.35}
 
-        # Tính toán điểm cuối cùng (Hoàn toàn độc lập với nội trở vật lý)
+        # --- CHUẨN HÓA TRỌNG SỐ TỪ FRONTEND VỀ TỔNG 1.0 ---
+        if custom_weights:
+            total_w = sum(custom_weights.values())
+            if total_w > 0:
+                weights = {k: float(v) / total_w for k, v in custom_weights.items()}
+            else:
+                weights = default_weights
+        else:
+            weights = default_weights
+
         df_wired["Final_score"] = (
-            (weights["w_sound"] * df_wired["S_sound_total"]) +
-            (weights["w_price"] * df_wired["S_price"])
+            (weights.get("w_sound", 0) * df_wired["S_sound_total"]) +
+            (weights.get("w_price", 0) * df_wired["S_price"])
         )
         return df_wired.sort_values(by="Final_score", ascending=False)
 
@@ -226,35 +261,42 @@ class AudioRecommender:
         df_speaker["S_power"] = self.normalize_min_max(df_speaker["power_watts"], higher_is_better=True)
         df_speaker["S_battery"] = self.normalize_min_max(df_speaker["battery_life_total"], higher_is_better=True)
         df_speaker["S_ip"] = df_speaker["ip_rating"].apply(self._get_ip_score)
-        df_speaker["S_price"] = self.normalize_min_max(df_speaker["avg_prive_vnd"], higher_is_better=False)
+        df_speaker["S_price"] = self.normalize_min_max(df_speaker["avg_price_vnd"], higher_is_better=False)
 
-        weights = custom_weights if custom_weights else {
+        default_weights = {
             "w_sound": 0.25, "w_power": 0.25, "w_battery": 0.15, "w_ip": 0.15, "w_price": 0.20
         }
 
+        # --- CHUẨN HÓA TRỌNG SỐ TỪ FRONTEND VỀ TỔNG 1.0 ---
+        if custom_weights:
+            total_w = sum(custom_weights.values())
+            if total_w > 0:
+                weights = {k: float(v) / total_w for k, v in custom_weights.items()}
+            else:
+                weights = default_weights
+        else:
+            weights = default_weights
+
         df_speaker["Final_score"] = (
-            (weights["w_sound"] * df_speaker["S_sound"]) +
-            (weights["w_power"] * df_speaker["S_power"]) +
-            (weights["w_battery"] * df_speaker["S_battery"]) +
-            (weights["w_ip"] * df_speaker["S_ip"]) +
-            (weights["w_price"] * df_speaker["S_price"])
+            (weights.get("w_sound", 0) * df_speaker["S_sound"]) +
+            (weights.get("w_power", 0) * df_speaker["S_power"]) +
+            (weights.get("w_battery", 0) * df_speaker["S_battery"]) +
+            (weights.get("w_ip", 0) * df_speaker["S_ip"]) +
+            (weights.get("w_price", 0) * df_speaker["S_price"])
         )
         return df_speaker.sort_values(by="Final_score", ascending=False)
 
                     
-# --- KHỐI ĐIỀU KHIỂN KIỂM THỬ TOÀN DIỆN (CHUYÊN SÂU CHO KIẾN TRÚC SƯ WEB/AI) ---
+# --- KHỐI ĐIỀU KHIỂN KIỂM THỬ TOÀN DIỆN MỚI ---
 if __name__ == "__main__":
-    # Cấu hình hiển thị của Pandas để không bị bao dòng hoặc ẩn cột trên Console
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 1000)
     pd.set_option('display.float_format', lambda x: '%.3f' % x)
 
     print("="*90)
-    print("🚀 AUDIOHUB CORE ENGINE - KHỐI KIỂM THỬ MA TRẬN ĐIỂM CHUYÊN SÂU (COMPREHENSIVE TEST)")
+    print("🚀 AUDIOHUB CORE ENGINE - FIXED VERSION TESTING")
     print("="*90)
 
-    # 1. Khởi tạo Tập dữ liệu đa dạng để thử nghiệm mọi góc cạnh của thuật toán
-    # Thêm các sản phẩm từ phân khúc giá rẻ, tầm trung, đến hi-end, đa dạng màng loa và kiến trúc
     rich_mock_data = {
         "category": ["TWS", "TWS", "TWS", "Wired", "Wired", "Wired", "Wired", "Speaker", "Speaker"],
         "model_name": [
@@ -264,14 +306,14 @@ if __name__ == "__main__":
         ],
         "brand": ["Sony", "Apple", "Moondrop", "Moondrop", "Sennheiser", "Beyerdynamic", "Letshuoer", "JBL", "Marshall"],
         "sound_signature": ["Warm", "Neutral", "V-Shape", "Harman", "Neutral", "Bright", "V-Shape", "Bass-heavy", "Warm"],
-        "avg_prive_vnd": [6250000, 5750000, 790000, 2150000, 3750000, 5500000, 3400000, 3950000, 7800000],
+        "avg_price_vnd": [6250000, 5750000, 790000, 2150000, 3750000, 5500000, 3400000, 3950000, 7800000],
         "anc_depth_db": [39, 39, 35, 0, 0, 0, 0, 0, 0],
         "anc_type": ["Adaptive", "Adaptive", "Standard", "None", "None", "None", "None", "None", "None"],
-        "battery_life_total": [24, 30, 12, 0, 0, 0, 0, 20, 0], # Marshall cắm điện trực tiếp = 0h pin
-        "codec_score": [5, 2, 2, 0, 0, 0, 0, 0, 0],             # 5: LDAC, 2: AAC, 1: SBC
+        "battery_life_total": [24, 30, 12, 0, 0, 0, 0, 20, 0], 
+        "codec_score": [5, 2, 2, 0, 0, 0, 0, 0, 0],             
         "ip_rating": ["IPX4", "IPX4", "None", "None", "None", "None", "None", "IP67", "None"],
         "impedance_ohm": [0, 0, 0, 32, 18, 250, 16, 0, 0],
-        "sensity_db": [0, 0, 0, 102, 119, 96, 102, 0, 0],       # Cột map linh hoạt tên từ DB
+        "sensity_db": [0, 0, 0, 102, 119, 96, 102, 0, 0],       
         "driver_type": ["Dynamic", "Dynamic", "Dynamic", "Single DD", "Dynamic", "Dynamic", "Planar Magnetic", "Dynamic Woofer", "Custom Dynamic"],
         "driver_material": ["PET", "Standard", "Titanium", "LCP", "LCP Polymer", "Standard", "Titanium", "Standard", "Standard"],
         "power_watts": [0, 0, 0, 0, 0, 0, 0, 40, 60]
@@ -280,47 +322,19 @@ if __name__ == "__main__":
     df = pd.DataFrame(rich_mock_data)
     recommender = AudioRecommender(df)
 
-    # ----------------------------------------------------------------------
-    # KỊCH BẢN 1: ĐÁNH GIÁ TWS (User gu ấm "Warm", ưu tiên chống ồn và chất âm)
-    # ----------------------------------------------------------------------
-    print("\n🔍 [DANH MỤC: TWS] Kiểm thử với Gu âm: 'Warm' | Trọng số mặc định")
-    res_tws = recommender.score_tws(user_pref="Warm")
-    tws_cols = ["model_name", "sound_signature", "avg_prive_vnd", "S_sound", "S_anc", "S_battery", "S_codec", "S_ip", "S_price", "Final_score"]
+    # Thử nghiệm gửi bộ trọng số chưa chuẩn hóa (Thang 0-100 từ Slider)
+    unnormalized_frontend_weights = {
+        "w_sound": 80, "w_anc": 60, "w_battery": 40, "w_codec": 20, "w_ip": 20, "w_price": 50
+    }
+
+    print("\n🔍 [DANH MỤC: TWS] Kiểm thử với Trọng số thô từ Frontend (Tổng khác 1.0) | Gu âm: 'Warm'")
+    res_tws = recommender.score_tws(user_pref="Warm", custom_weights=unnormalized_frontend_weights)
+    tws_cols = ["model_name", "anc_type", "anc_depth_db", "avg_price_vnd", "S_sound", "S_anc", "S_price", "Final_score"]
     print(res_tws[tws_cols].to_string(index=False))
-    print("\n💡 Phân tích TWS:")
-    print(" - Sony WF-1000XM5 đứng top vì S_sound = 1.0 (khớp hoàn hảo gu Warm) và hỗ trợ LDAC (S_codec cao).")
-    print(" - Moondrop Space Travel tuy giá cực rẻ (S_price = 1.0) nhưng bị kéo điểm xuống do pin yếu và codec thấp.")
 
-    # ----------------------------------------------------------------------
-    # KỊCH BẢN 2: ĐÁNH GIÁ TAI NGHE DÂY (WIRED) - BÓC TÁCH NỘI TRỞ THÀNH ADVICE
-    # ----------------------------------------------------------------------
     print("\n" + "-"*90)
-    print("🔍 [DANH MỤC: WIRED] Kiểm thử với Gu âm: 'Neutral' | Khấu trừ nội trở khỏi điểm số")
+    print("🔍 [DANH MỤC: WIRED] Kiểm thử với thuộc tính 'avg_price_vnd' mới | Gu âm: 'Neutral'")
     res_wired = recommender.score_wired(user_pref="Neutral")
-    
-    # Bung cấu trúc Dict của Hệ chuyên gia thành các cột độc lập để hiển thị rõ trên bảng
-    res_wired["Advice_Status"] = res_wired["Driving_Advice"].apply(lambda x: x["status"])
-    res_wired["Advice_Text"] = res_wired["Driving_Advice"].apply(lambda x: x["advice"])
-    
-    wired_cols = ["model_name", "sound_signature", "driver_type", "driver_material", "S_tuning", "S_driver", "S_sound_total", "S_price", "Final_score", "Advice_Status", "Advice_Text"]
+    wired_cols = ["model_name", "sound_signature", "avg_price_vnd", "S_sound_total", "S_price", "Final_score"]
     print(res_wired[wired_cols].to_string(index=False))
-    print("\n💡 Phân tích Wired (Quan trọng):")
-    print(" - Bạn có thể thấy Beyerdynamic DT 990 Pro (250 Ohm) có điểm số hoàn toàn không bị kéo thấp xuống bởi trở kháng lớn.")
-    print(" - Điểm Final_score lúc này chỉ dựa trên chất âm (S_sound_total) và giá thành (S_price).")
-    print(" - Trở kháng cao và độ nhạy thấp nay được chuyển hoàn toàn thành nhãn điện học 'Hard' kèm lời khuyên chuẩn Audiophile.")
-
-    # ----------------------------------------------------------------------
-    # KỊCH BẢN 3: ĐÁNH GIÁ LOA (SPEAKER) (User thích nghe tạp, gu cân bằng "Neutral")
-    # ----------------------------------------------------------------------
-    print("\n" + "-"*90)
-    print("🔍 [DANH MỤC: SPEAKER] Kiểm thử với Gu âm: 'Neutral' | Đánh giá công suất & Độ bền")
-    res_speaker = recommender.score_speaker(user_pref="Neutral")
-    speaker_cols = ["model_name", "sound_signature", "power_watts", "battery_life_total", "S_sound", "S_power", "S_battery", "S_ip", "S_price", "Final_score"]
-    print(res_speaker[speaker_cols].to_string(index=False))
-    print("\n💡 Phân tích Speaker:")
-    print(" - JBL Charge 5 vượt lên nhờ có pin trâu (S_battery = 1.0) và chỉ số chống nước bụi khắt khe IP67 (S_ip = 0.9).")
-    print(" - Marshall Acton III tuy công suất lớn (S_power = 1.0) nhưng vì là loa cắm điện bàn (Pin = 0, Không kháng nước) nên điểm tổng hợp bị tụt giảm.")
-    
-    print("\n" + "="*90)
-    print("✅ KIỂM THỬ TOÀN DIỆN HOÀN TẤT - THUẬT TOÁN ĐÁNH GIÁ ĐÚNG THIẾT KẾ KỸ THUẬT!")
     print("="*90)

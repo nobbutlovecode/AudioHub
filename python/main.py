@@ -21,32 +21,34 @@ GLOBAL_PRODUCT_DF = None
 
 @asynccontextmanager
 async def lifespan(api_python: FastAPI):
-    """
-    Lifespan event: Chạy duy nhất 1 lần khi Web Server khởi động.
-    Kéo toàn bộ dữ liệu từ Neon DB lên RAM để tối ưu hóa tốc độ tính toán MCDM (< 10ms/request)
-    """
     global GLOBAL_PRODUCT_DF
-    print(
-        "🔌 [WEB SERVER] Đang kết nối Neon DB để đồng bộ dữ liệu thiết bị..."
-    )
+    print("🔌 [WEB SERVER] Đang kết nối Neon DB và nạp dữ liệu lên RAM Cache...")
     try:
         conn = psycopg2.connect(DATABASE_URL)
-        # SỬA ĐỔI: Sử dụng chính xác tên bảng 'audio_gear' của dự án AudioHub
         query = "SELECT * FROM audio_gear;"
-        GLOBAL_PRODUCT_DF = pd.read_sql_query(query, conn)
+        raw_df = pd.read_sql(query, conn)
         conn.close()
-        # SỬA ĐỔI: Bổ sung chữ f-string để hiển thị chính xác số lượng bản ghi
-        print(
-            f"✅ [WEB SERVER] Đã nạp thành công {len(GLOBAL_PRODUCT_DF)} sản phẩm vào RAM Cache!"
-        )
+
+        # BẪY TỰ VỆ (FALLBACK): Đảm bảo các thuộc tính nâng cao của TWS/Speaker luôn có trường dữ liệu
+        # tránh lỗi KeyError khi chạy thuật toán chấm điểm
+        required_cols = {
+            "avg_price_vnd": 0, # Phòng hờ nếu có bản ghi mới bị bỏ trống
+            "battery_life_total": 0,
+            "codec_score": 1,
+            "ip_rating": "None",
+            "anc_type": "None",
+            "anc_depth_db": 0,
+            "power_watts": 0
+        }
+        for col, default_val in required_cols.items():
+            if col not in raw_df.columns:
+                raw_df[col] = default_val
+
+        GLOBAL_PRODUCT_DF = raw_df
+        print(f"✅ [RAM CACHE] Đã nạp thành công {len(raw_df)} sản phẩm. Hệ thống sẵn sàng tính toán!")
     except Exception as e:
-        print(
-            f"❌ [WEB SERVER] Thất bại khi đồng bộ dữ liệu từ Cloud DB: {e}"
-        )
-        # Dự phòng phương án DB sập: Khởi tạo DataFrame rỗng để tránh crash sập toàn bộ Web Server
+        print(f"❌ Thất bại khi nạp dữ liệu từ Neon DB: {e}")
         GLOBAL_PRODUCT_DF = pd.DataFrame()
-    yield
-    print("🛑 [WEB SERVER] Đang giải phóng tài nguyên hệ thống...")
 
 
 # Khởi tạo instance của Web API Service (Đã sửa lỗi thiếu dấu phẩy)
