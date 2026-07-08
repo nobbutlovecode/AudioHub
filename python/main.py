@@ -6,6 +6,10 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+
 
 # Đảm bảo đường dẫn gói chính xác theo cấu trúc thư mục python/ của bạn
 from python.recommender import AudioRecommender
@@ -55,6 +59,13 @@ async def lifespan(api_python: FastAPI):
 api_service = FastAPI(
     title="AudioHub Web API Engine", version="1.0.0", lifespan=lifespan
 )
+
+api_service.mount("/html", StaticFiles(directory="html"), name="html"   )
+
+@api_service.get("/")
+async def serve_frontend():
+    return FileResponse("..html/index.html")
+
 
 # Cấu hình CORS - Bắt buộc phải có đối với mô hình Web Application biệt lập Frontend-Backend
 # Giúp trình duyệt cho phép Frontend (React/Next.js) gọi API sang Backend an toàn
