@@ -12,8 +12,8 @@ from fastapi.responses import FileResponse
 
 
 # Đảm bảo đường dẫn gói chính xác theo cấu trúc thư mục python/ của bạn
-from python.recommender import AudioRecommender
-from python.schemas import RecommendRequest
+from recommender import AudioRecommender
+from schemas import RecommendRequest
 
 # Nạp biến môi trường từ file .env (ở local) hoặc cấu hình hệ thống (ở Cloud Render)
 load_dotenv()
