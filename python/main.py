@@ -53,6 +53,7 @@ async def lifespan(api_python: FastAPI):
     except Exception as e:
         print(f"❌ Thất bại khi nạp dữ liệu từ Neon DB: {e}")
         GLOBAL_PRODUCT_DF = pd.DataFrame()
+    yield
 
 
 # Khởi tạo instance của Web API Service
