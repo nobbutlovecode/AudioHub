@@ -3,262 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioHub Premium Engine</title>
+    <title>AudioHub Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --bg-body: #050505; --surface: #0A0A0A; --text-main: #FFFFFF; --text-sub: #A3A3A3;
-            --b-grad-1: #C9A94D; --b-grad-2: #F5D97A; --card-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            --metal-color: #D4AF37; --metal-grad: linear-gradient(135deg, #B8962E 0%, #F5D97A 40%, #D4AF37 60%, #B8962E 100%);
-            --metal-highlight: inset 0 1px 2px rgba(255,255,255,0.5), inset 0 -3px 5px rgba(0,0,0,0.6);
-            --fx-glow: rgba(212, 175, 55, 0.4); --fx-cursor: rgba(212, 175, 55, 0.15);
+            --bg-body: #050505; --surface: #0A0A0A; --surface-glass: rgba(10, 10, 10, 0.85);
+            --text-main: #FFFFFF; --text-sub: #A3A3A3;
+            --primary: #00E5FF; 
+            --primary-grad: linear-gradient(135deg, #009FB3 0%, #7AF7FF 40%, #00E5FF 60%, #009FB3 100%);
+            --fx-glow: rgba(0, 229, 255, 0.4); --b-color: #1F2A33;
         }
-        html.theme-cyan {
-            --bg-body: #020202; --surface: #05070A; --text-main: #E6F7FF; --text-sub: #8AA4B2;
-            --b-grad-1: #00E5FF; --b-grad-2: #009FB3; --card-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
-            --metal-color: #00E5FF; --metal-grad: linear-gradient(135deg, #009FB3 0%, #7AF7FF 40%, #00E5FF 60%, #009FB3 100%);
-            --metal-highlight: inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -3px 5px rgba(0,0,0,0.6);
-            --fx-glow: rgba(0, 229, 255, 0.6); --fx-cursor: rgba(0, 229, 255, 0.2);
+        html.theme-gold {
+            --bg-body: #0A0A0A; --surface: #121212; --surface-glass: rgba(18, 18, 18, 0.85);
+            --primary: #D4AF37; 
+            --primary-grad: linear-gradient(135deg, #B8962E 0%, #F5D97A 40%, #D4AF37 60%, #B8962E 100%);
+            --fx-glow: rgba(212, 175, 55, 0.4); --b-color: #2A2A2A;
         }
-        body {
-            background-color: var(--bg-body);
-            background-image: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--fx-cursor) 0%, transparent 40%);
-            color: var(--text-main); transition: all 0.5s ease; overflow-x: hidden; margin: 0;
-        }
-
-        /* KHUNG VIỀN & NÚT KIM LOẠI */
-        .spec-border-premium {
-            background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(135deg, var(--b-grad-1), var(--b-grad-2)) border-box;
-            border: 1.5px solid transparent; border-radius: 10px; box-shadow: var(--card-shadow); transition: box-shadow 0.3s ease, transform 0.1s ease;
-        }
-        .btn-metal-premium {
-            background: var(--metal-grad); box-shadow: var(--metal-highlight), 0 0 15px var(--fx-glow); color: #000;
-            position: relative; overflow: hidden; border: none; border-radius: 6px;
-        }
-        .btn-metal-premium::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: skewX(-20deg); animation: sweep 2.5s infinite;
-        }
-        @keyframes sweep { 0% { left: -100%; } 20%, 100% { left: 200%; } }
-
-        /* TAB & SLIDER */
-        .tab-active { background: var(--metal-grad); color: #000; font-weight: bold; box-shadow: 0 0 10px var(--fx-glow); }
-        .tab-inactive { background: rgba(255,255,255,0.05); color: var(--text-sub); border: 1px solid var(--b-grad-2); }
-        input[type=range].premium-slider { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range].premium-slider::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 99px; }
-        input[type=range].premium-slider::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--metal-grad); box-shadow: var(--metal-highlight), 0 0 10px var(--metal-color); margin-top: -7px; cursor: pointer; transition: transform 0.2s; }
-        input[type=range].premium-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-        /* HIỆU ỨNG CHUỘT */
-        #dynamic-cursor { position: fixed; width: 150px; height: 150px; background: radial-gradient(circle, var(--fx-cursor) 0%, transparent 60%); border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); z-index: 9999; mix-blend-mode: screen; transition: left 0.05s linear, top 0.05s linear; }
-        .particle { position: fixed; background: var(--metal-color); border-radius: 50%; pointer-events: none; box-shadow: 0 0 10px var(--metal-color); animation: particle-fade 0.8s forwards; z-index: 9998; transform: translate(-50%, -50%); }
-        @keyframes particle-fade { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
         
-        /* SPINNER */
-        .spinner-neon { width: 24px; height: 24px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--metal-color); animation: spin 1s linear infinite, pulseNeon 1.5s ease-in-out infinite; }
-        @keyframes pulseNeon { 0%, 100% { box-shadow: 0 0 5px var(--fx-cursor); } 50% { box-shadow: 0 0 15px var(--fx-glow); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Navbar & Dropdown Tối ưu */
+        .glass-nav { background: var(--surface-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b-color); }
+        .nav-link { color: var(--text-sub); transition: all 0.3s; cursor: pointer; }
+        .nav-link:hover { color: var(--primary); text-shadow: 0 0 10px var(--fx-glow); }
+        
+        .cat-dropdown { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--b-color); border-radius: 12px; padding: 1.5rem; gap: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .nav-item-cat:hover .cat-dropdown { display: flex; }
+        .cat-icon-box { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--b-color); display: flex; align-items: center; justify-content: center; transition: all 0.3s; cursor: pointer; color: var(--text-sub); }
+        .cat-icon-box:hover { border-color: var(--primary); box-shadow: 0 0 20px var(--fx-glow); color: var(--primary); }
+
+        /* Tiện ích */
+        .text-gradient { background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--fx-glow); outline: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--b-color); border-radius: 10px; }
     </style>
 </head>
-<body class="font-sans min-h-screen p-4 md:p-10">
+<body>
 
-    <div id="dynamic-cursor"></div>
-
-    <div class="max-w-4xl mx-auto space-y-8 relative z-10">
-        
-        <!-- HEADER -->
-        <div class="spec-border-premium p-6 flex justify-between items-center bg-[var(--surface)]">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-black tracking-widest text-transparent bg-clip-text uppercase" style="background-image: var(--metal-grad)" id="title-text">AUDIOHUB ENGINE</h1>
-                <p class="text-[var(--text-sub)] text-sm tracking-wide mt-1" id="sub-text">MCDM Premium Calculation</p>
-            </div>
-            <button onclick="switchTheme()" class="p-2.5 border border-[var(--b-grad-2)] rounded text-[var(--text-main)] hover:bg-[rgba(255,255,255,0.05)] transition-all cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/></svg>
-            </button>
-        </div>
-
-        <!-- BẢNG ĐIỀU KHIỂN -->
-        <div class="spec-border-premium p-6 md:p-8 bg-[var(--surface)]">
+    <!-- NAVBAR (Các Mục từ 1 đến 9) -->
+    <nav class="glass-nav fixed top-0 left-0 w-full z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-8">
+            <!-- 1. Brand -->
+            <div class="text-xl font-black tracking-widest cursor-pointer text-gradient" onclick="window.scrollTo(0,0)">AUDIOHUB</div>
             
-            <!-- TABS -->
-            <div class="flex flex-wrap justify-center gap-4 mb-8">
-                <button data-cat="TWS" class="tab-btn tab-active px-6 py-2.5 rounded uppercase text-sm tracking-widest transition-all">TWS Earbuds</button>
-                <button data-cat="WIRED" class="tab-btn tab-inactive px-6 py-2.5 rounded uppercase text-sm tracking-widest transition-all">Wired IEMs</button>
-                <button data-cat="SPEAKER" class="tab-btn tab-inactive px-6 py-2.5 rounded uppercase text-sm tracking-widest transition-all">Speakers</button>
-            </div>
-
-            <!-- PREF & SLIDERS -->
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-[var(--text-sub)] mb-2 uppercase tracking-wider">Audio Signature Target</label>
-                    <select id="userPref" class="w-full p-3 bg-[#0A0A0A] border border-[var(--b-grad-2)] text-[var(--text-main)] rounded outline-none focus:ring-1 focus:ring-[var(--metal-color)]">
-                        <option value="Neutral">Neutral (Cân bằng, chi tiết)</option>
-                        <option value="Warm">Warm (Ấm áp, mượt mà)</option>
-                        <option value="Bright">Bright (Sáng, sắc nét)</option>
-                        <option value="Bass-heavy">Bass-heavy (Sôi động, nhiều trầm)</option>
-                        <option value="V-Shape">V-Shape (V-Shape, Fun)</option>
-                        <option value="Harman">Harman Target (Đại chúng)</option>
-                        <option value="Mid-forward">Mid-forward (Vocal)</option>
-                    </select>
-                </div>
-
-                <div class="h-px w-full bg-gradient-to-r from-transparent via-[var(--b-grad-1)] to-transparent opacity-30 my-6"></div>
-
-                <div id="sliders-container" class="space-y-5">
-                    <!-- Sliders injected by JS -->
-                </div>
-
-                <!-- SUBMIT -->
-                <div class="pt-6">
-                    <button id="btn-submit" class="btn-metal-premium w-full py-4 uppercase font-black tracking-[0.2em] text-sm active:scale-[0.98]">
-                        🚀 Analyze Data Core
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- KHU VỰC KẾT QUẢ -->
-        <div id="results-container" class="space-y-4">
-            <!-- Render kết quả tại đây -->
-        </div>
-
-    </div>
-
-    <script>
-        // CONFIG HỆ THỐNG
-        const API_URL = "/api/v1/recommend"; 
-        let currentCat = "TWS";
-
-        const SLIDER_DEF = {
-            sound: "Chất lượng / Chi tiết Âm thanh",
-            price: "Tối ưu Giá thành",
-            anc: "Khử ồn chủ động (ANC)",
-            battery: "Thời lượng Pin",
-            codec: "Codec (LDAC, aptX)",
-            ip: "Kháng nước (IP Rating)",
-            power: "Công suất loa (Watts)"
-        };
-
-        const CAT_CONFIG = {
-            TWS: ["sound", "anc", "battery", "codec", "ip", "price"],
-            WIRED: ["sound", "price"],
-            SPEAKER: ["sound", "power", "battery", "ip", "price"]
-        };
-
-        // RENDER SLIDERS ĐỘNG
-        function renderSliders() {
-            const container = document.getElementById('sliders-container');
-            container.innerHTML = "";
-            CAT_CONFIG[currentCat].forEach(key => {
-                container.innerHTML += `
-                    <div class="space-y-2">
-                        <div class="flex justify-between text-sm font-medium">
-                            <span class="text-[var(--text-sub)]">${SLIDER_DEF[key]}</span>
-                            <span id="val-${key}" class="drop-shadow-lg" style="color: var(--metal-color)">50%</span>
-                        </div>
-                        <input type="range" id="w_${key}" min="0" max="100" value="50" class="premium-slider" oninput="document.getElementById('val-${key}').innerText = this.value + '%'">
+            <!-- 2. Categories & Icons (3,4,5) -->
+            <div class="relative nav-item-cat py-2">
+                <span class="font-bold uppercase text-sm nav-link">Categories ▾</span>
+                <div class="cat-dropdown z-50">
+                    <div class="flex flex-col items-center group">
+                        <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18v-5.5m0 0l4.5 4.5V7l-4.5 4.5m0 0L7.5 16m4.5-4.5V6L7.5 10.5"></path></svg></div>
+                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)]">TWS</span>
                     </div>
-                `;
-            });
-        }
+                    <div class="flex flex-col items-center group">
+                        <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h10a4 4 0 004-4M3 15V9a9 9 0 0118 0v6M3 15h.01M21 15h.01M9 20h6"></path></svg></div>
+                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)]">WIRED</span>
+                    </div>
+                    <div class="flex flex-col items-center group">
+                        <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6a2 2 0 012-2h2a2 2 0 012 2v13a2 2 0 01-2 2h-2a2 2 0 01-2-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
+                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)]">SPEAKERS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // CHUYỂN TAB
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                currentCat = e.target.dataset.cat;
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.className = "tab-btn px-6 py-2.5 rounded uppercase text-sm tracking-widest transition-all " + 
-                        (b.dataset.cat === currentCat ? "tab-active" : "tab-inactive");
-                });
-                renderSliders();
-            });
-        });
-
-        // ĐỔI THEME (GOLD/CYAN)
-        function switchTheme() {
-            document.documentElement.classList.toggle('theme-cyan');
-            const isCyan = document.documentElement.classList.contains('theme-cyan');
-            document.getElementById('title-text').innerText = isCyan ? "AUDIOHUB NEON" : "AUDIOHUB ENGINE";
-            document.getElementById('sub-text').innerText = isCyan ? "Futuristic Signal Processor" : "MCDM Premium Calculation";
-        }
-
-        // GỌI API & RENDER RESULT
-        const formatVND = (v) => new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(v);
-        
-        document.getElementById('btn-submit').addEventListener('click', async () => {
-            const btn = document.getElementById('btn-submit');
-            const resBox = document.getElementById('results-container');
+        <div class="flex items-center space-x-6">
+            <!-- 6. About & 7. Donate -->
+            <span class="text-sm font-bold uppercase nav-link" onclick="openModal('modal-about')">About</span>
+            <span class="text-sm font-bold uppercase nav-link" onclick="openModal('modal-donate')">Donate</span>
             
-            // Loading state
-            btn.disabled = true;
-            btn.innerHTML = `<div class="flex justify-center items-center space-x-3"><div class="spinner-neon"></div><span>Processing Signal...</span></div>`;
-            resBox.innerHTML = "";
+            <!-- 8. Your C-List -->
+            <button onclick="openModal('modal-clist')" class="relative text-sm font-bold uppercase nav-link flex items-center gap-2 border border-[var(--b-color)] px-4 py-1.5 rounded-full hover:border-[var(--primary)]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                Your C-List
+                <span id="clist-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-[0_0_10px_red] transition-transform">0</span>
+            </button>
 
-            // Lấy data
-            let weights = {};
-            CAT_CONFIG[currentCat].forEach(k => weights[`w_${k}`] = parseInt(document.getElementById(`w_${k}`).value));
+            <!-- 9. Theme Toggle -->
+            <button onclick="toggleTheme()" class="text-xl nav-link">🌓</button>
+        </div>
+    </nav>
 
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ category: currentCat, user_pref: document.getElementById('userPref').value, custom_weights: weights, limit: 5 })
-                });
-                const data = await res.json();
+    <!-- 10. MAIN CONTENT (Hero & Search) -->
+    <main class="pt-40 pb-16 px-6 flex flex-col items-center text-center min-h-screen">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-widest text-gradient mb-4 uppercase">
+            AudioHub Recommender Engine
+        </h1>
+        <p class="text-lg md:text-xl text-[var(--text-sub)] tracking-wide font-light mb-12 uppercase">
+            Comparing TWS, IEM and speakers
+        </p>
 
-                if (data.status === "success" && data.data.length > 0) {
-                    let html = `<h3 class="text-xl font-bold uppercase tracking-widest mb-4 mt-8" style="color: var(--metal-color)">Recommended Hardware</h3>`;
-                    data.data.forEach((item, i) => {
-                        let badge = item.Driving_Advice ? `<span class="mt-2 inline-block px-3 py-1 text-xs font-bold bg-black/50 border border-[var(--metal-color)] text-[var(--metal-color)] rounded">⚡ ${item.Driving_Advice.advice}</span>` : "";
-                        html += `
-                            <div class="spec-border-premium p-5 mb-4 flex justify-between items-center hover:scale-[1.01] transition-transform bg-[var(--surface)] cursor-pointer">
-                                <div>
-                                    <span class="text-[10px] uppercase font-black px-2 py-1 bg-[var(--text-main)] text-black rounded tracking-widest">RANK #${i+1}</span>
-                                    <h4 class="text-lg md:text-xl font-bold mt-2 text-[var(--text-main)]">${item.model_name} <span class="text-[var(--text-sub)] text-sm">by ${item.brand}</span></h4>
-                                    <p class="text-sm text-[var(--text-sub)] mt-1">Signature: <span class="text-white">${item.sound_signature}</span></p>
-                                    <p class="text-sm mt-1 font-bold" style="color: var(--metal-color)">${formatVND(item.price_vnd)}</p>
-                                    ${badge}
-                                </div>
-                                <div class="text-right pl-4">
-                                    <div class="text-2xl md:text-3xl font-black drop-shadow-lg" style="color: var(--metal-color)">${(item.Final_score * 100).toFixed(1)}%</div>
-                                    <div class="text-[10px] text-[var(--text-sub)] uppercase tracking-widest mt-1">Match</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    resBox.innerHTML = html;
-                } else {
-                    resBox.innerHTML = `<div class="spec-border-premium p-6 text-center text-[var(--text-sub)]">No matches found for this config.</div>`;
-                }
-            } catch (err) {
-                resBox.innerHTML = `<div class="spec-border-premium p-6 text-center text-red-400 border-red-900">API Connection Failed. Please check Render server.</div>`;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `🚀 Analyze Data Core`;
-            }
-        });
+        <!-- Search Autocomplete Area -->
+        <div class="relative w-full max-w-2xl z-40">
+            <div class="relative flex items-center">
+                <svg class="w-6 h-6 absolute left-5 text-[var(--text-sub)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="searchInput" placeholder="Search devices to add to C-List..." autocomplete="off" class="search-input w-full bg-[var(--surface)] border border-[var(--b-color)] text-white pl-14 pr-4 py-4 rounded-full text-lg shadow-lg">
+            </div>
+            
+            <ul id="searchDropdown" class="absolute top-full left-0 w-full mt-2 bg-[var(--surface)] border border-[var(--primary)] rounded-xl shadow-[0_0_20px_var(--fx-glow)] overflow-hidden hidden text-left max-h-80 overflow-y-auto custom-scrollbar">
+                <!-- Data injected by JS -->
+            </ul>
+        </div>
+        
+        <!-- Khối chứa thuật toán sẽ được chèn vào đây trong tương lai -->
+        <div id="mcdm-container" class="mt-20 w-full max-w-5xl"></div>
+    </main>
 
-        // HIỆU ỨNG CHUỘT (PARTICLES)
-        const dynamicCursor = document.getElementById('dynamic-cursor');
-        let lastParticleTime = 0;
-        document.addEventListener('mousemove', (e) => {
-            const x = e.clientX, y = e.clientY;
-            requestAnimationFrame(() => {
-                dynamicCursor.style.left = `${x}px`; dynamicCursor.style.top = `${y}px`;
-                document.body.style.setProperty('--mouse-x', `${(x / window.innerWidth) * 100}%`);
-                document.body.style.setProperty('--mouse-y', `${(y / window.innerHeight) * 100}%`);
-            });
-            if (Date.now() - lastParticleTime > 40) {
-                const p = document.createElement('div'); p.className = 'particle';
-                const s = Math.random() * 2 + 1; p.style.width = `${s}px`; p.style.height = `${s}px`;
-                p.style.left = `${x + (Math.random() - 0.5) * 20}px`; p.style.top = `${y + (Math.random() - 0.5) * 20}px`;
-                document.body.appendChild(p); setTimeout(() => p.remove(), 800);
-                lastParticleTime = Date.now();
-            }
-        });
+    <!-- Khu vực nhúng Modal tự động -->
+    <div id="modals-injector"></div>
 
-        // Khởi tạo slider ban đầu
-        renderSliders();
-    </script>
+    <!-- Nạp file Script xử lý toàn bộ logic -->
+    <script src="/html/js/app.js"></script>
 </body>
 </html>
