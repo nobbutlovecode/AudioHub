@@ -42,45 +42,53 @@
 <body>
 
     <!-- NAVBAR (Các Mục từ 1 đến 9) -->
+    <!-- 1. STICKY NAVBAR (ĐÃ SỬA CĂN GIỮA) -->
     <nav class="glass-nav fixed top-0 left-0 w-full z-50 px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center space-x-8">
-            <!-- 1. Brand -->
-            <div class="text-xl font-black tracking-widest cursor-pointer text-gradient" onclick="window.scrollTo(0,0)">AUDIOHUB</div>
-            
-            <!-- 2. Categories & Icons (3,4,5) -->
+        
+        <!-- NHÓM TRÁI: Logo -->
+        <div class="flex-shrink-0 w-1/4">
+            <div class="text-xl font-black tracking-widest cursor-pointer text-gradient inline-block hover:scale-105 transition-transform" onclick="window.scrollTo(0,0)">
+                AUDIOHUB
+            </div>
+        </div>
+        
+        <!-- NHÓM GIỮA: Categories, About, Donate, Theme (Căn giữa tuyệt đối) -->
+        <div class="flex-1 flex justify-center items-center space-x-10">
+            <!-- Categories -->
             <div class="relative nav-item-cat py-2">
                 <span class="font-bold uppercase text-sm nav-link">Categories ▾</span>
+                <!-- Dropdown Icons -->
                 <div class="cat-dropdown z-50">
                     <div class="flex flex-col items-center group">
                         <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18v-5.5m0 0l4.5 4.5V7l-4.5 4.5m0 0L7.5 16m4.5-4.5V6L7.5 10.5"></path></svg></div>
-                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)]">TWS</span>
+                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)] transition-colors">TWS</span>
                     </div>
                     <div class="flex flex-col items-center group">
                         <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h10a4 4 0 004-4M3 15V9a9 9 0 0118 0v6M3 15h.01M21 15h.01M9 20h6"></path></svg></div>
-                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)]">WIRED</span>
+                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)] transition-colors">WIRED</span>
                     </div>
                     <div class="flex flex-col items-center group">
                         <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6a2 2 0 012-2h2a2 2 0 012 2v13a2 2 0 01-2 2h-2a2 2 0 01-2-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
-                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)]">SPEAKERS</span>
+                        <span class="text-[10px] mt-2 font-bold tracking-wider group-hover:text-[var(--primary)] transition-colors">SPEAKERS</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="flex items-center space-x-6">
-            <!-- 6. About & 7. Donate -->
+            <!-- About & Donate -->
             <span class="text-sm font-bold uppercase nav-link" onclick="openModal('modal-about')">About</span>
             <span class="text-sm font-bold uppercase nav-link" onclick="openModal('modal-donate')">Donate</span>
             
-            <!-- 8. Your C-List -->
-            <button onclick="openModal('modal-clist')" class="relative text-sm font-bold uppercase nav-link flex items-center gap-2 border border-[var(--b-color)] px-4 py-1.5 rounded-full hover:border-[var(--primary)]">
+            <!-- Theme Toggle -->
+            <button onclick="toggleTheme()" class="text-xl nav-link hover:scale-110 transition-transform">🌓</button>
+        </div>
+
+        <!-- NHÓM PHẢI: Your C-List -->
+        <div class="flex-shrink-0 w-1/4 flex justify-end">
+            <button onclick="openModal('modal-clist')" class="relative text-sm font-bold uppercase nav-link flex items-center gap-2 border border-[var(--b-color)] px-4 py-1.5 rounded-full hover:border-[var(--primary)] transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 Your C-List
-                <span id="clist-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-[0_0_10px_red] transition-transform">0</span>
+                <span id="clist-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-[0_0_10px_red] transition-transform duration-200">0</span>
             </button>
-
-            <!-- 9. Theme Toggle -->
-            <button onclick="toggleTheme()" class="text-xl nav-link">🌓</button>
         </div>
     </nav>
 

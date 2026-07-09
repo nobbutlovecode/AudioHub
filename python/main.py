@@ -16,6 +16,9 @@ HTML_DIR = os.path.abspath(os.path.join(BASE_DIR,"..", "html"))
 from recommender import AudioRecommender
 from schemas import RecommendRequest
 
+from fastapi import Query
+
+
 # Nạp biến môi trường từ file .env (ở local) hoặc cấu hình hệ thống (ở Cloud Render)
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -85,7 +88,50 @@ def read_root():
     """Endpoint kiểm tra trạng thái hoạt động của Web Server (Health Check)"""
     return {"status": "healthy", "service": "AudioHub Web API Engine"}
 
+@api_service.get("/api/v1/search", status_code=status.HTTP_200_OK)
+async def search_products(q: str = Query("", description="Từ khóa tìm kiếm")):
+    """
+    Endpoint tìm kiếm sản phẩm theo tên (Model) hoặc Hãng (Brand).
+    Phục vụ cho thanh Search Bar Autocomplete trên Frontend.
+    """
+    if GLOBAL_PRODUCT_DF is None or GLOBAL_PRODUCT_DF.empty:
+        return {"status": "empty", "data": []}
+    
+    query = q.strip().lower()
+    if not query:
+        return {"status": "success", "data": []}
 
+    try:
+        df = GLOBAL_PRODUCT_DF.copy()
+        
+        # Tiền xử lý: Ép kiểu string và xử lý NaN để tránh crash thuật toán tìm kiếm
+        df['model_name_clean'] = df['model_name'].fillna('').astype(str).str.lower()
+        df['brand_clean'] = df['brand'].fillna('').astype(str).str.lower()
+        
+        # Tìm kiếm chuỗi con (contains)
+        mask = df['model_name_clean'].str.contains(query) | df['brand_clean'].str.contains(query)
+               
+        search_result = df[mask].head(6) # Trả về tối đa 6 kết quả để UI không bị tràn
+        
+        # Kiểm tra nếu DB của bạn không có cột 'id' thì lấy index làm ID tạm
+        if 'id' not in search_result.columns:
+            search_result = search_result.reset_index().rename(columns={'index': 'id'})
+            
+        # Chỉ lấy các cột cần thiết gửi về Frontend cho nhẹ
+        cols_to_return = ['id', 'brand', 'model_name', 'price_vnd', 'category']
+        # Lọc các cột thực sự tồn tại trong DB để tránh lỗi KeyError
+        valid_cols = [col for col in cols_to_return if col in search_result.columns]
+        
+        result_list = search_result[valid_cols].to_dict(orient="records")
+        
+        return {
+            "status": "success", 
+            "data": result_list
+        }
+    except Exception as e:
+        print(f"❌ Lỗi API Search: {str(e)}") # Báo lỗi ra log của Render
+        return {"status": "error", "message": "Lỗi xử lý tìm kiếm", "data": []}
+    
 @api_service.post("/api/v1/recommend", status_code=status.HTTP_200_OK)
 async def get_recommendations(payload: RecommendRequest):
     """
