@@ -47,9 +47,25 @@ window.onclick = function(event) {
 }
 
 // --- 3. ĐỔI THEME CHÍNH (CYAN / GOLD) ---
-function toggleTheme() {
-    document.documentElement.classList.toggle('theme-gold');
+function toggleTheme(btn) {
+    // 1. Hiệu ứng xoay
+    btn.classList.add("rotate");
+    setTimeout(() => btn.classList.remove("rotate"), 600);
+
+    // 2. Tác động vào thẻ HTML (thẻ cao nhất)
+    const root = document.documentElement; // Đây là thẻ <html>
+    root.classList.toggle("theme-gold");
+    
+    // Debug: Kiểm tra xem đã thêm class chưa
+    console.log("Current classes on <html>:", root.classList);
 }
+
+// Thêm đoạn này để nhớ theme khi load lại trang
+window.onload = () => {
+    if (localStorage.getItem('audiohub-theme') === 'gold') {
+        document.documentElement.classList.add('theme-gold');
+    }
+};
 
 // --- 4. HỆ THỐNG IN-MEMORY C-LIST (VERSUS STYLE) ---
 // Biến này lưu trên RAM trình duyệt. Reset web = mất trắng.

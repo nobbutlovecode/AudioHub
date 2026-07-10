@@ -6,6 +6,31 @@
     <title>AudioHub Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Thêm đoạn này vào phần <style> của index.html */
+
+/* Cấu hình Theme */
+        html.theme-gold {
+            --bg-body: #0A0A0A; --surface: #121212; --surface-glass: rgba(18, 18, 18, 0.85);
+            --primary: #D4AF37; 
+            --primary-grad: linear-gradient(135deg, #B8962E 0%, #F5D97A 40%, #D4AF37 60%, #B8962E 100%);
+            --fx-glow: rgba(212, 175, 55, 0.4); --b-color: #2A2A2A;
+        }
+
+/* Nút Toggle mới */
+        .toggle-btn {
+            width: 45px; height: 45px; border-radius: 50%; position: relative; cursor: pointer; overflow: hidden;
+            background: radial-gradient(circle, #1a1a1a, #0b0b0b);
+            box-shadow: 0 0 15px var(--fx-glow); transition: transform 0.6s ease;
+        }
+        .toggle-btn.rotate { transform: rotate(360deg); }
+        .icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .sun, .moon { transition: all 0.7s cubic-bezier(.65,0,.35,1); width: 20px; height: 20px; }
+        .sun { color: #FFD700; filter: drop-shadow(0 0 5px #FFD700); }
+        .moon { position: absolute; color: #00e5ff; transform: translateY(100%); opacity: 0; filter: drop-shadow(0 0 5px #00e5ff); }
+
+/* Trạng thái khi ở Gold mode */    
+        .theme-gold .sun { transform: translateY(-100%); opacity: 0; }  
+        .theme-gold .moon { transform: translateY(0); opacity: 1; }
         :root {
             --bg-body: #050505; --surface: #0A0A0A; --surface-glass: rgba(10, 10, 10, 0.85);
             --text-main: #FFFFFF; --text-sub: #A3A3A3;
