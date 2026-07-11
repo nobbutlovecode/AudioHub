@@ -6,68 +6,82 @@
     <title>AudioHub Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Thêm đoạn này vào phần <style> của index.html */
-
-/* Cấu hình Theme */
-        html.theme-gold {
-            --bg-body: #0A0A0A; --surface: #121212; --surface-glass: rgba(18, 18, 18, 0.85);
-            --primary: #D4AF37; 
-            --primary-grad: linear-gradient(135deg, #B8962E 0%, #F5D97A 40%, #D4AF37 60%, #B8962E 100%);
-            --fx-glow: rgba(212, 175, 55, 0.4); --b-color: #2A2A2A;
-        }
-
-/* Nút Toggle mới */
-        .toggle-btn {
-            width: 45px; height: 45px; border-radius: 50%; position: relative; cursor: pointer; overflow: hidden;
-            background: radial-gradient(circle, #1a1a1a, #0b0b0b);
-            box-shadow: 0 0 15px var(--fx-glow); transition: transform 0.6s ease;
-        }
-        .toggle-btn.rotate { transform: rotate(360deg); }
-        .icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-        .sun, .moon { transition: all 0.7s cubic-bezier(.65,0,.35,1); width: 20px; height: 20px; }
-        .sun { color: #FFD700; filter: drop-shadow(0 0 5px #FFD700); }
-        .moon { position: absolute; color: #00e5ff; transform: translateY(100%); opacity: 0; filter: drop-shadow(0 0 5px #00e5ff); }
-
-/* Trạng thái khi ở Gold mode */    
-        .theme-gold .sun { transform: translateY(-100%); opacity: 0; }  
-        .theme-gold .moon { transform: translateY(0); opacity: 1; }
+        /* 1. HỆ THỐNG BIẾN MÀU (VARIABLES) - TÔNG CYAN MẶC ĐỊNH */
         :root {
-            --bg-body: #050505; --surface: #0A0A0A; --surface-glass: rgba(10, 10, 10, 0.85);
-            --text-main: #FFFFFF; --text-sub: #A3A3A3;
+            --bg-body: #050505; 
+            --surface: #0A0A0A; 
+            --surface-glass: rgba(10, 10, 10, 0.85);
+            --text-main: #FFFFFF; 
+            --text-sub: #A3A3A3;
             --primary: #00E5FF; 
             --primary-grad: linear-gradient(135deg, #009FB3 0%, #7AF7FF 40%, #00E5FF 60%, #009FB3 100%);
-            --fx-glow: rgba(0, 229, 255, 0.4); --b-color: #1F2A33;
+            --fx-glow: rgba(0, 229, 255, 0.4); 
+            --b-color: #1F2A33;
         }
+
+        /* 2. HỆ THỐNG BIẾN MÀU - TÔNG GOLD (KHI ĐƯỢC KÍCH HOẠT) */
         html.theme-gold {
-            --bg-body: #0A0A0A; --surface: #121212; --surface-glass: rgba(18, 18, 18, 0.85);
+            --bg-body: #0A0A0A; 
+            --surface: #121212; 
+            --surface-glass: rgba(18, 18, 18, 0.85);
             --primary: #D4AF37; 
             --primary-grad: linear-gradient(135deg, #B8962E 0%, #F5D97A 40%, #D4AF37 60%, #B8962E 100%);
-            --fx-glow: rgba(212, 175, 55, 0.4); --b-color: #2A2A2A;
+            --fx-glow: rgba(212, 175, 55, 0.4); 
+            --b-color: #332D1F;
         }
-        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+        /* 3. HIỆU ỨNG MORPH CHO TOÀN TRANG */
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            font-family: 'Segoe UI', sans-serif; 
+            overflow-x: hidden; 
+            /* Đây là dòng tạo hiệu ứng Morph mượt mà khi đổi theme */
+            transition: background-color 0.8s ease, color 0.8s ease; 
+        }
         
-        /* Navbar & Dropdown Tối ưu */
-        .glass-nav { background: var(--surface-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b-color); }
+        /* 4. CSS CHO UI COMPONENTS (Dùng biến để tự động đổi màu, không bị đơn điệu) */
+        .glass-nav { background: var(--surface-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b-color); transition: all 0.5s ease; }
         .nav-link { color: var(--text-sub); transition: all 0.3s; cursor: pointer; }
         .nav-link:hover { color: var(--primary); text-shadow: 0 0 10px var(--fx-glow); }
         
         .cat-dropdown { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--b-color); border-radius: 12px; padding: 1.5rem; gap: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .nav-item-cat:hover .cat-dropdown { display: flex; }
-        .cat-icon-box { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--b-color); display: flex; align-items: center; justify-content: center; transition: all 0.3s; cursor: pointer; color: var(--text-sub); }
+        .cat-icon-box { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--b-color); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; color: var(--text-sub); }
         .cat-icon-box:hover { border-color: var(--primary); box-shadow: 0 0 20px var(--fx-glow); color: var(--primary); }
 
-        /* Tiện ích */
-        .text-gradient { background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .text-gradient { background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: background 0.5s ease; }
+        .search-input { transition: all 0.5s ease; }
         .search-input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--fx-glow); outline: none; }
+        
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--b-color); border-radius: 10px; }
+
+        /* 5. CSS CHO NÚT ANIMATION TOGGLE THEME */
+        .toggle-btn {
+            width: 38px; height: 38px; border-radius: 50%; position: relative; cursor: pointer; overflow: hidden;
+            background: radial-gradient(circle, #1a1a1a, #0b0b0b);
+            border: 1px solid var(--b-color);
+            box-shadow: 0 0 10px var(--fx-glow); transition: transform 0.6s ease, box-shadow 0.5s ease;
+        }
+        .toggle-btn:hover { border-color: var(--primary); }
+        .toggle-btn.rotate { transform: rotate(360deg); }
+        .icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .sun, .moon { transition: all 0.7s cubic-bezier(.65,0,.35,1); width: 20px; height: 20px; }
+        
+        /* Màu Icon mặc định */
+        .sun { color: #00e5ff; transform: translateY(-100%); opacity: 0; filter: drop-shadow(0 0 5px #00e5ff); }
+        .moon { position: absolute; color: #00e5ff; transform: translateY(0); opacity: 1; filter: drop-shadow(0 0 5px #00e5ff); }
+
+        /* Trạng thái Icon khi sang Theme Gold */    
+        .theme-gold .sun { transform: translateY(0); opacity: 1; color: #FFD700; filter: drop-shadow(0 0 5px #FFD700); }  
+        .theme-gold .moon { transform: translateY(100%); opacity: 0; }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR (Các Mục từ 1 đến 9) -->
-    <!-- 1. STICKY NAVBAR (ĐÃ SỬA CĂN GIỮA) -->
+    <!-- NAVBAR -->
     <nav class="glass-nav fixed top-0 left-0 w-full z-50 px-6 py-4 flex justify-between items-center">
         
         <!-- NHÓM TRÁI: Logo -->
@@ -77,12 +91,11 @@
             </div>
         </div>
         
-        <!-- NHÓM GIỮA: Categories, About, Donate, Theme (Căn giữa tuyệt đối) -->
+        <!-- NHÓM GIỮA: Categories, About, Donate, Theme -->
         <div class="flex-1 flex justify-center items-center space-x-10">
             <!-- Categories -->
             <div class="relative nav-item-cat py-2">
                 <span class="font-bold uppercase text-sm nav-link">Categories ▾</span>
-                <!-- Dropdown Icons -->
                 <div class="cat-dropdown z-50">
                     <div class="flex flex-col items-center group">
                         <div class="cat-icon-box"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18v-5.5m0 0l4.5 4.5V7l-4.5 4.5m0 0L7.5 16m4.5-4.5V6L7.5 10.5"></path></svg></div>
@@ -99,12 +112,16 @@
                 </div>
             </div>
 
-            <!-- About & Donate -->
             <span class="text-sm font-bold uppercase nav-link" onclick="openModal('modal-about')">About</span>
             <span class="text-sm font-bold uppercase nav-link" onclick="openModal('modal-donate')">Donate</span>
             
-            <!-- Theme Toggle -->
-            <button onclick="toggleTheme()" class="text-xl nav-link hover:scale-110 transition-transform">🌓</button>
+            <!-- ĐÂY LÀ NÚT THEME TOGGLE MỚI ĐÃ ĐƯỢC THAY THẾ -->
+            <div class="toggle-btn" onclick="switchThemeEffect(this)">
+                <div class="icon">
+                    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.2" y1="4.2" x2="6" y2="6"/><line x1="18" y1="18" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="6" y2="18"/><line x1="18" y1="6" x2="19.8" y2="4.2"/></svg>
+                    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+                </div>
+            </div>
         </div>
 
         <!-- NHÓM PHẢI: Your C-List -->
@@ -117,7 +134,7 @@
         </div>
     </nav>
 
-    <!-- 10. MAIN CONTENT (Hero & Search) -->
+    <!-- MAIN CONTENT -->
     <main class="pt-40 pb-16 px-6 flex flex-col items-center text-center min-h-screen">
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-black tracking-widest text-gradient mb-4 uppercase">
             AudioHub Recommender Engine
@@ -138,14 +155,237 @@
             </ul>
         </div>
         
-        <!-- Khối chứa thuật toán sẽ được chèn vào đây trong tương lai -->
         <div id="mcdm-container" class="mt-20 w-full max-w-5xl"></div>
+        <!-- ========================================== -->
+        <!-- KHU VỰC BẢNG ĐIỀU KHIỂN TÌM KIẾM (CONTROL PANEL) -->
+        <!-- ========================================== -->
+        <div class="w-full max-w-5xl bg-[var(--surface-glass)] backdrop-blur-md border border-[var(--b-color)] rounded-2xl p-6 md:p-8 mt-8 shadow-2xl relative overflow-hidden z-10 transition-all hover:border-[var(--primary)] hover:shadow-[0_0_30px_var(--fx-glow)]">
+    
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 relative z-10">
+        
+        <!-- ================= CỘT TRÁI (LEFT PANEL) ================= -->
+                <div class="md:col-span-7 space-y-8">
+            
+            <!-- Vùng 1, 2, 3: Favorite Sound Signature -->
+                    <div>
+                        <label class="block text-sm font-bold text-[var(--primary)] uppercase tracking-widest mb-3 glow-text">Favorite Sound Signature <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <select id="sound1" class="custom-select w-full bg-[var(--bg-body)] border border-[var(--b-color)] text-white text-sm rounded-lg p-2.5 focus:border-[var(--primary)] outline-none transition-all shadow-inner">
+                                <option value="" disabled selected>Select 1st...</option>
+                                <option value="Warm">Warm</option>
+                                <option value="Neutral">Neutral</option>
+                                <option value="V-Shape">V-Shape</option>
+                                <option value="Harman">Harman</option>
+                                <option value="Bright">Bright</option>
+                                <option value="Bass-heavy">Bass-heavy</option>
+                                <option value="Mid-forward">Mid-forward</option>
+                                <option value="U-Shape">U-Shape</option>
+                                <option value="Analytical">Analytical</option>
+                                <option value="Dark">Dark</option>
+                            </select>
+                            <select id="sound2" class="custom-select w-full bg-[var(--bg-body)] border border-[var(--b-color)] text-[var(--text-sub)] text-sm rounded-lg p-2.5 outline-none transition-all">
+                                <option value="">(Optional)</option>
+                                <option value="Warm">Warm</option><option value="Neutral">Neutral</option><option value="V-Shape">V-Shape</option><option value="Harman">Harman</option><option value="Bright">Bright</option><option value="Bass-heavy">Bass-heavy</option>
+                            </select>
+                            <select id="sound3" class="custom-select w-full bg-[var(--bg-body)] border border-[var(--b-color)] text-[var(--text-sub)] text-sm rounded-lg p-2.5 outline-none transition-all">
+                                <option value="">(Optional)</option>
+                                <option value="Warm">Warm</option><option value="Neutral">Neutral</option><option value="V-Shape">V-Shape</option><option value="Harman">Harman</option><option value="Bright">Bright</option><option value="Bass-heavy">Bass-heavy</option>
+                            </select>
+                        </div>
+                        <p id="sound-error" class="text-xs text-red-500 mt-2 hidden tracking-wide">⚠ You must select at least 1 sound signature.</p>
+                    </div>
+
+            <!-- Vùng 4, 5: Affordable Price -->
+            <       div>
+                        <label class="block text-sm font-bold text-[var(--primary)] uppercase tracking-widest mb-3 glow-text">Affordable Price (VND)</label>
+                        <div class="flex items-center gap-4">
+                            <input type="number" id="price-min" placeholder="Min Price" class="w-full bg-[var(--bg-body)] border border-[var(--b-color)] text-white text-center rounded-lg p-3 focus:border-[var(--primary)] focus:shadow-[0_0_15px_var(--fx-glow)] outline-none transition-all">
+                    <!-- SVG Mũi tên -->
+                            <svg class="w-6 h-6 text-[var(--text-sub)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            <input type="number" id="price-max" placeholder="Max Price" class="w-full bg-[var(--bg-body)] border border-[var(--b-color)] text-white text-center rounded-lg p-3 focus:border-[var(--primary)] focus:shadow-[0_0_15px_var(--fx-glow)] outline-none transition-all">
+                        </div>
+                    </div>
+
+            <!-- Vùng 11: ANC (Chỉ kích hoạt khi chọn TWS) -->
+                    <div id="zone-anc" class="ui-disabled-zone transition-all duration-500">
+                        <label class="block text-sm font-bold text-white uppercase tracking-widest mb-3">Active Noise Cancelling (ANC)</label>
+                        <div class="flex gap-4">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="anc_choice" value="Yes" class="peer hidden" checked>
+                                <div class="text-center py-2 border border-[var(--b-color)] rounded-lg text-[var(--text-sub)] peer-checked:border-[var(--primary)] peer-checked:text-[var(--primary)] peer-checked:bg-[var(--primary)]/10 transition-all">YES</div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="anc_choice" value="No" class="peer hidden">
+                                <div class="text-center py-2 border border-[var(--b-color)] rounded-lg text-[var(--text-sub)] peer-checked:border-[var(--primary)] peer-checked:text-[var(--primary)] peer-checked:bg-[var(--primary)]/10 transition-all">NO</div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+        <!-- ================= CỘT PHẢI (RIGHT PANEL) ================= -->
+        <div class="md:col-span-5 space-y-8 flex flex-col justify-between">
+            
+            <!-- Vùng 6, 7, 8: Choose your Category -->
+            <div>
+                <label class="block text-sm font-bold text-[var(--primary)] uppercase tracking-widest mb-4 glow-text text-center">Choose Category</label>
+                <div class="flex justify-center gap-6">
+                    <!-- TWS (6) -->
+                    <label class="cursor-pointer group relative">
+                        <input type="radio" name="category" value="TWS" class="peer hidden" onchange="updateUIState()">
+                        <div class="w-20 h-20 rounded-full border-2 border-[var(--b-color)] flex items-center justify-center bg-[var(--bg-body)] text-[var(--text-sub)] peer-checked:border-[var(--primary)] peer-checked:text-[var(--primary)] peer-checked:shadow-[0_0_25px_var(--fx-glow)] transition-all duration-300">
+                            <!-- Bluetooth Icon -->
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18v-5.5m0 0l4.5 4.5V7l-4.5 4.5m0 0L7.5 16m4.5-4.5V6L7.5 10.5"></path></svg>
+                        </div>
+                        <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-wider text-[var(--text-sub)] group-[.peer:checked+div+&]:text-[var(--primary)] transition-colors">TWS</span>
+                    </label>
+
+                    <!-- Wired (7) -->
+                    <label class="cursor-pointer group relative">
+                        <input type="radio" name="category" value="Wired" class="peer hidden" onchange="updateUIState()" checked>
+                        <div class="w-20 h-20 rounded-full border-2 border-[var(--b-color)] flex items-center justify-center bg-[var(--bg-body)] text-[var(--text-sub)] peer-checked:border-[var(--primary)] peer-checked:text-[var(--primary)] peer-checked:shadow-[0_0_25px_var(--fx-glow)] transition-all duration-300">
+                            <!-- Headphones Icon -->
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h10a4 4 0 004-4M3 15V9a9 9 0 0118 0v6M3 15h.01M21 15h.01M9 20h6"></path></svg>
+                        </div>
+                        <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-wider text-[var(--text-sub)] group-[.peer:checked+div+&]:text-[var(--primary)] transition-colors">WIRED</span>
+                    </label>
+
+                    <!-- Speakers (8) -->
+                    <label class="cursor-pointer group relative">
+                        <input type="radio" name="category" value="Speaker" class="peer hidden" onchange="updateUIState()">
+                        <div class="w-20 h-20 rounded-full border-2 border-[var(--b-color)] flex items-center justify-center bg-[var(--bg-body)] text-[var(--text-sub)] peer-checked:border-[var(--primary)] peer-checked:text-[var(--primary)] peer-checked:shadow-[0_0_25px_var(--fx-glow)] transition-all duration-300">
+                            <!-- Speaker Icon -->
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6a2 2 0 012-2h2a2 2 0 012 2v13a2 2 0 01-2 2h-2a2 2 0 01-2-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </div>
+                        <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-wider text-[var(--text-sub)] group-[.peer:checked+div+&]:text-[var(--primary)] transition-colors">SPEAKER</span>
+                    </label>
+                </div>
+            </div>
+
+                    <!-- Vùng 10: Battery Life -->
+                    <div id="zone-battery" class="ui-disabled-zone transition-all duration-500 mt-12">
+                        <label class="block text-sm font-bold text-white uppercase tracking-widest mb-3">Minimum Battery Life (Hours)</label>
+                        <div class="relative">
+                            <input type="number" id="battery-input" min="0" step="1" placeholder="e.g. 24" class="w-full bg-[var(--bg-body)] border border-[var(--b-color)] text-white text-2xl font-black text-center rounded-xl py-6 focus:border-[var(--primary)] focus:shadow-[0_0_20px_var(--fx-glow)] outline-none transition-all">
+                            <span class="absolute right-6 top-1/2 -translate-y-1/2 text-[var(--text-sub)] font-bold">HRS</span>
+                        </div>
+                    </div>
+            
+                    <!-- Nút Submit Form -->
+                    <button onclick="extractFormData()" class="w-full mt-6 py-4 rounded-xl font-bold text-black uppercase tracking-widest bg-[var(--primary-grad)] hover:brightness-110 shadow-[0_0_20px_var(--fx-glow)] active:scale-[0.98] transition-all">
+                        Find My Audio Gear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= CSS CẦN THÊM VÀO THẺ <STYLE> ================= -->
+        <style>
+    /* CSS cho logic vô hiệu hóa vùng chọn */
+            .ui-disabled-zone {
+                opacity: 0.3;
+                filter: grayscale(100%);
+                pointer-events: none;
+            }
+    
+            .glow-text {
+                text-shadow: 0 0 10px var(--fx-glow);
+            }
+    
+    /* Ẩn mũi tên tăng giảm số của input number */
+            input[type=number]::-webkit-inner-spin-button, 
+            input[type=number]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; margin: 0; 
+            }
+        </style>
+
+<!-- ================= JAVASCRIPT ĐIỀU KHIỂN LOGIC ================= -->
+        <script>
+    // 1. Hàm tự động bật/tắt (phát sáng/vô hiệu hóa) các ô ANC và Battery
+            function updateUIState() {
+                const category = document.querySelector('input[name="category"]:checked').value;
+                const zoneAnc = document.getElementById('zone-anc');
+                const zoneBattery = document.getElementById('zone-battery');
+
+        // Reset về trạng thái tắt
+                zoneAnc.classList.add('ui-disabled-zone');
+                zoneBattery.classList.add('ui-disabled-zone');
+
+        // Phân rã logic theo yêu cầu
+                if (category === 'TWS') {
+                    zoneAnc.classList.remove('ui-disabled-zone');      // Bật ANC
+                    zoneBattery.classList.remove('ui-disabled-zone');  // Bật Battery
+                }    
+                else if (category === 'Speaker') {
+                    zoneBattery.classList.remove('ui-disabled-zone');  // Bật Battery
+                }
+        // Nếu là Wired (mặc định) thì cả 2 vùng trên giữ nguyên trạng thái tắt
+            }   
+
+    // 2. Hàm trích xuất dữ liệu, ép kiểu và gửi cho Thuật toán
+            function extractFormData() {
+        // --- Validate Sound Signature (Bắt buộc ít nhất 1) ---
+                const s1 = document.getElementById('sound1').value;
+                const s2 = document.getElementById('sound2').value;
+                const s3 = document.getElementById('sound3').value;
+                const errorMsg = document.getElementById('sound-error');
+        
+                let selectedSounds = [s1, s2, s3].filter(val => val !== ""); // Lọc bỏ giá trị rỗng
+
+                if (selectedSounds.length === 0) {
+                    errorMsg.classList.remove('hidden');
+                    document.getElementById('sound1').focus();
+                    return; // Dừng thực thi
+                } else {
+                    errorMsg.classList.add('hidden');
+                }
+
+        // --- Lấy dữ liệu Category ---
+                const category = document.querySelector('input[name="category"]:checked').value;
+
+        // --- Ép kiểu dữ liệu an toàn ---
+                let finalData = {
+                    category: category,
+                    sound_signatures: selectedSounds, // Mảng 1-3 phần tử
+                    price_min: parseFloat(document.getElementById('price-min').value) || 0.0,
+                    price_max: parseFloat(document.getElementById('price-max').value) || 99999999.0
+                };
+
+        // --- Lấy dữ liệu có điều kiện ---
+                if (category === 'TWS') {
+                    finalData.anc_required = document.querySelector('input[name="anc_choice"]:checked').value === 'Yes';
+                }
+
+                if (category === 'TWS' || category === 'Speaker') {
+            // Ép kiểu float ép buộc cho thuật toán
+                    finalData.battery_target = parseFloat(document.getElementById('battery-input').value) || 0.0;
+                }
+
+                // (Phần này để debug, bạn có thể truyền biến finalData này vào hàm fetch API của AudioHub)
+                console.log("DỮ LIỆU ĐÃ CHUẨN HÓA GỬI LÊN ENGINE:", finalData);
+                alert("Success! Check Console (F12) for extracted data payload.");
+            }
+
+            // Chạy khởi tạo 1 lần khi load trang để set đúng trạng thái mặc định (Wired)
+            window.addEventListener('DOMContentLoaded', updateUIState);
+        </script>
     </main>
 
-    <!-- Khu vực nhúng Modal tự động -->
     <div id="modals-injector"></div>
 
-    <!-- Nạp file Script xử lý toàn bộ logic -->
+    <!-- SCRIPT XỬ LÝ THEME ĐỘC LẬP (Đảm bảo hoạt động 100% không phụ thuộc app.js) -->
+    <script>
+        function switchThemeEffect(btn) {
+            // 1. Hiệu ứng xoay nút
+            btn.classList.add("rotate");
+            setTimeout(() => btn.classList.remove("rotate"), 600);
+            
+            // 2. Chuyển class trên thẻ HTML cao nhất
+            document.documentElement.classList.toggle("theme-gold");
+        }
+    </script>
+
+    <!-- Nạp file Script xử lý toàn bộ logic app -->
     <script src="/html/js/app.js"></script>
 </body>
 </html>
