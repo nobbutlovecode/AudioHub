@@ -187,7 +187,7 @@
         <!-- ========================================== -->
         <div class="w-full max-w-4xl mx-auto bg-[var(--surface-glass)] backdrop-blur-md border border-[var(--b-color)] rounded-2xl p-6 mt-4 shadow-2xl relative transition-all hover:border-[var(--primary)] hover:shadow-[0_0_30px_var(--fx-glow)] text-left">
             
-            <!-- 1. CATEGORY SELECTOR (FIX ĐƯỜNG DẪN FastAPI) -->
+            <!-- 1. CATEGORY SELECTOR (FIXED PATH: 'image' instead of 'images') -->
             <div class="mb-8">
                 <label class="block text-center text-xs font-bold text-[var(--primary)] uppercase tracking-widest mb-4 glow-text">Choose Category</label>
                 <div class="flex justify-center gap-6">
@@ -197,9 +197,9 @@
                         <input type="radio" name="category" value="TWS" class="peer hidden" onchange="updateUIState()">
                         <div class="cat-frame w-24 h-24 rounded-full border-2 border-[var(--b-color)] flex items-center justify-center bg-[var(--bg-body)] peer-checked:border-[var(--primary)] peer-checked:shadow-[0_0_20px_var(--fx-glow)] transition-all duration-300">
                             <div class="cat-img-wrapper w-16 h-16 flex items-center justify-center">
-                                <!-- Đường dẫn đã được chốt cố định theo cấu trúc Render -->
-                                <img src="/html/images/tws-cyan.png" alt="TWS" class="img-cyan w-full h-full object-contain">
-                                <img src="/html/images/tws-gold.png" alt="TWS" class="img-gold w-full h-full object-contain">
+                                <!-- Đã sửa /images/ thành /image/ -->
+                                <img src="/html/image/tws-cyan.png" alt="TWS" class="img-cyan w-full h-full object-contain">
+                                <img src="/html/image/tws-gold.png" alt="TWS" class="img-gold w-full h-full object-contain">
                             </div>
                         </div>
                     </label>
@@ -209,8 +209,9 @@
                         <input type="radio" name="category" value="Wired" class="peer hidden" onchange="updateUIState()" checked>
                         <div class="cat-frame w-24 h-24 rounded-full border-2 border-[var(--b-color)] flex items-center justify-center bg-[var(--bg-body)] peer-checked:border-[var(--primary)] peer-checked:shadow-[0_0_20px_var(--fx-glow)] transition-all duration-300">
                             <div class="cat-img-wrapper w-16 h-16 flex items-center justify-center">
-                                <img src="/html/images/wired-cyan.png" alt="Wired" class="img-cyan w-full h-full object-contain">
-                                <img src="/html/images/wired-gold.png" alt="Wired" class="img-gold w-full h-full object-contain">
+                                <!-- Đã sửa /images/ thành /image/ -->
+                                <img src="/html/image/wired-cyan.png" alt="Wired" class="img-cyan w-full h-full object-contain">
+                                <img src="/html/image/wired-gold.png" alt="Wired" class="img-gold w-full h-full object-contain">
                             </div>
                         </div>
                     </label>
@@ -220,8 +221,9 @@
                         <input type="radio" name="category" value="Speaker" class="peer hidden" onchange="updateUIState()">
                         <div class="cat-frame w-24 h-24 rounded-full border-2 border-[var(--b-color)] flex items-center justify-center bg-[var(--bg-body)] peer-checked:border-[var(--primary)] peer-checked:shadow-[0_0_20px_var(--fx-glow)] transition-all duration-300">
                             <div class="cat-img-wrapper w-16 h-16 flex items-center justify-center">
-                                <img src="/html/images/speaker-cyan.png" alt="Speaker" class="img-cyan w-full h-full object-contain">
-                                <img src="/html/images/speaker-gold.png" alt="Speaker" class="img-gold w-full h-full object-contain">
+                                <!-- Đã sửa /images/ thành /image/ -->
+                                <img src="/html/image/speaker-cyan.png" alt="Speaker" class="img-cyan w-full h-full object-contain">
+                                <img src="/html/image/speaker-gold.png" alt="Speaker" class="img-gold w-full h-full object-contain">
                             </div>
                         </div>
                     </label>
