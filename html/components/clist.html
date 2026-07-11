@@ -1,6 +1,9 @@
 <div id="modal-clist" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] justify-center items-center">
     <div class="modal-content bg-[var(--surface)] border border-[var(--primary)] shadow-[0_0_30px_var(--fx-glow)] rounded-xl max-w-2xl w-[90%] h-[75vh] p-8 relative flex flex-col">
-        <button onclick="closeModal('modal-clist')" class="absolute top-4 right-4 text-[var(--text-sub)] hover:text-white text-xl">✕</button>
+        <!-- Đổi dòng cũ thành dòng này trong clist.html -->
+<button id="btn-run-compare" onclick="runCList()" class="w-full py-3.5 rounded-lg font-bold text-black uppercase tracking-widest bg-[var(--primary-grad)] hover:brightness-110 shadow-[0_0_15px_var(--fx-glow)] active:scale-[0.98] transition-all">
+    Run Comparison Algorithm
+</button>
         <h2 class="text-xl font-bold mb-1 text-gradient uppercase tracking-wider">Your Comparing List</h2>
         <p class="text-xs text-[var(--text-sub)] mb-4 pb-4 border-b border-[var(--b-color)]">
             Dữ liệu lưu tạm thời trên bộ nhớ (In-memory). Sẽ biến mất khi tải lại trang.

@@ -174,4 +174,10 @@ if (searchInput) {
             searchDropdown.classList.add('hidden');
         }
     });
+    function runCList() {
+    // Logic của bạn: Ví dụ đọc danh sách thiết bị đang lưu trên RAM
+    // và gửi API riêng để so sánh chúng.
+    alert("Tính năng C-List MCDM Engine đang được phát triển!");
+    closeModal('modal-clist'); // Đóng popup sau khi click
+}
 }
