@@ -1,0 +1,18 @@
+name: AudioHub Keep-Alive Strategy
+
+on:
+  schedule:
+    # Chạy mỗi 14 phút từ 06:00 sáng đến 01:00 đêm (Giờ Việt Nam)
+    # Nghỉ hoàn toàn từ 1h sáng đến 6h sáng để tiết kiệm Quota
+    - cron: "*/14 0-17,23 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-render-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping AudioHub API Health Check
+        run: |
+          echo "Bắt đầu gọi dậy server Render..."
+          curl -sSf https://audiohub-h060.onrender.com/health > /dev/null
+          echo "Đã Ping thành công! Server đang thức."
