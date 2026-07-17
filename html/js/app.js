@@ -180,4 +180,42 @@ if (searchInput) {
     alert("Tính năng C-List MCDM Engine đang được phát triển!");
     closeModal('modal-clist'); // Đóng popup sau khi click
 }
+// =================================================================
+// TÍNH NĂNG C-LIST: RUN COMPARISON ALGORITHM
+// Sử dụng window. để đảm bảo hàm là Global (Toàn cục)
+// =================================================================
+window.runCList = function() {
+    // 1. Kiểm tra xem C-List có đang trống không?
+    // (Giả sử bạn nhét các item vào thẻ có id="clist-items")
+    const clistContainer = document.getElementById('clist-items');
+    
+    // Nếu không tìm thấy vùng chứa, hoặc vùng chứa không có thẻ con nào (trống)
+    if (!clistContainer || clistContainer.children.length === 0) {
+        alert("⚠️ C-List của bạn đang trống! Hãy dùng thanh Tìm kiếm ở ngoài để thêm sản phẩm vào trước nhé.");
+        return; // Dừng lại, không chạy tiếp
+    }
+
+    // 2. Nếu có dữ liệu, thông báo cho người dùng
+    alert("🚀 Khởi động Engine: Đang đưa các thiết bị trong C-List của bạn vào ma trận so sánh MCDM...");
+
+    // 3. Đóng Modal C-List lại
+    const modalClist = document.getElementById('modal-clist');
+    if (modalClist) {
+        modalClist.classList.add('hidden');
+    }
+
+    // 4. Tự động "Bấm hộ" người dùng nút Run MCDM ở màn hình chính
+    // (Gọi lại hàm extractAndSearch mà chúng ta đã viết ở index.html)
+    if (typeof extractAndSearch === "function") {
+        extractAndSearch();
+    } else {
+        console.error("Không tìm thấy hàm extractAndSearch()");
+    }
+
+    // 5. Cuộn màn hình mượt mà xuống khu vực Bảng Kết quả
+    const resultsContainer = document.getElementById('results-container');
+    if (resultsContainer) {
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
 }
