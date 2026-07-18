@@ -1,9 +1,11 @@
-<div id="modal-about" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] justify-center items-center">
-    <div class="modal-content bg-[var(--surface)] border border-[var(--primary)] shadow-[0_0_30px_var(--fx-glow)] rounded-xl max-w-lg w-[90%] p-8 relative">
-        <button onclick="closeModal('modal-about')" class="absolute top-4 right-4 text-[var(--text-sub)] hover:text-white text-xl">✕</button>
-        <h2 class="text-2xl font-bold mb-4 text-gradient uppercase tracking-wider">About AudioHub</h2>
+<div id="modal-about" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] justify-center items-center px-4">
+    <div class="modal-content bg-[var(--surface-glass)] backdrop-blur-xl border border-[var(--b-color)] shadow-[0_0_50px_var(--fx-glow)] rounded-2xl max-w-lg w-full p-8 relative animate-modal-in">
+        <button onclick="closeModal('modal-about')" aria-label="Close" class="absolute top-5 right-5 text-[var(--text-sub)] hover:text-[var(--primary)] transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <h2 class="text-2xl font-black mb-4 text-gradient uppercase tracking-wider font-display">About AudioHub</h2>
         <p class="text-[var(--text-sub)] leading-relaxed">
-            AudioHub Recommender Engine là hệ thống phân tích thiết bị âm thanh thông minh dựa trên ma trận MCDM. 
+            AudioHub Recommender Engine là hệ thống phân tích thiết bị âm thanh thông minh dựa trên ma trận MCDM.
             Chúng tôi giúp bạn tìm ra thiết bị hoàn hảo thông qua việc so sánh chuyên sâu các thông số kỹ thuật.
         </p>
     </div>

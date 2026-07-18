@@ -27,6 +27,12 @@ function openModal(id) {
     if(modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        const content = modal.querySelector('.modal-content');
+        if (content) {
+            content.classList.remove('animate-modal-in');
+            void content.offsetWidth; // force reflow để animation chạy lại mỗi lần mở
+            content.classList.add('animate-modal-in');
+        }
         if(id === 'modal-clist') renderCList(); // Cập nhật list trước khi mở
     }
 }
@@ -46,28 +52,8 @@ window.onclick = function(event) {
     }
 }
 
-// --- 3. ĐỔI THEME CHÍNH (CYAN / GOLD) ---
-function toggleTheme(btn) {
-    // 1. Hiệu ứng xoay
-    btn.classList.add("rotate");
-    setTimeout(() => btn.classList.remove("rotate"), 600);
-
-    // 2. Tác động vào thẻ HTML (thẻ cao nhất)
-    const root = document.documentElement; // Đây là thẻ <html>
-    root.classList.toggle("theme-gold");
-    
-    // Debug: Kiểm tra xem đã thêm class chưa
-    console.log("Current classes on <html>:", root.classList);
-}
-
-// Thêm đoạn này để nhớ theme khi load lại trang
-window.onload = () => {
-    if (localStorage.getItem('audiohub-theme') === 'gold') {
-        document.documentElement.classList.add('theme-gold');
-    }
-};
-
-// --- 4. HỆ THỐNG IN-MEMORY C-LIST (VERSUS STYLE) ---
+// --- 3. HỆ THỐNG IN-MEMORY C-LIST (VERSUS STYLE) ---
+// (Theme Cyan/Gold + độ sáng màu được quản lý tập trung trong index.html)
 // Biến này lưu trên RAM trình duyệt. Reset web = mất trắng.
 let cListMemory = []; 
 
@@ -174,48 +160,34 @@ if (searchInput) {
             searchDropdown.classList.add('hidden');
         }
     });
-    function runCList() {
-    // Logic của bạn: Ví dụ đọc danh sách thiết bị đang lưu trên RAM
-    // và gửi API riêng để so sánh chúng.
-    alert("Tính năng C-List MCDM Engine đang được phát triển!");
-    closeModal('modal-clist'); // Đóng popup sau khi click
 }
+
 // =================================================================
 // TÍNH NĂNG C-LIST: RUN COMPARISON ALGORITHM
-// Sử dụng window. để đảm bảo hàm là Global (Toàn cục)
+// Sử dụng window. để đảm bảo hàm là Global (Toàn cục), độc lập với
+// việc #searchInput có tồn tại hay không.
 // =================================================================
 window.runCList = function() {
     // 1. Kiểm tra xem C-List có đang trống không?
-    // (Giả sử bạn nhét các item vào thẻ có id="clist-items")
-    const clistContainer = document.getElementById('clist-items');
-    
-    // Nếu không tìm thấy vùng chứa, hoặc vùng chứa không có thẻ con nào (trống)
-    if (!clistContainer || clistContainer.children.length === 0) {
+    if (cListMemory.length === 0) {
         alert("⚠️ C-List của bạn đang trống! Hãy dùng thanh Tìm kiếm ở ngoài để thêm sản phẩm vào trước nhé.");
-        return; // Dừng lại, không chạy tiếp
+        return;
     }
 
-    // 2. Nếu có dữ liệu, thông báo cho người dùng
-    alert("🚀 Khởi động Engine: Đang đưa các thiết bị trong C-List của bạn vào ma trận so sánh MCDM...");
+    // 2. Đóng Modal C-List lại
+    closeModal('modal-clist');
 
-    // 3. Đóng Modal C-List lại
-    const modalClist = document.getElementById('modal-clist');
-    if (modalClist) {
-        modalClist.classList.add('hidden');
-    }
-
-    // 4. Tự động "Bấm hộ" người dùng nút Run MCDM ở màn hình chính
-    // (Gọi lại hàm extractAndSearch mà chúng ta đã viết ở index.html)
+    // 3. Gọi lại hàm extractAndSearch (đã định nghĩa trong index.html) để chạy MCDM Engine
     if (typeof extractAndSearch === "function") {
         extractAndSearch();
     } else {
         console.error("Không tìm thấy hàm extractAndSearch()");
+        return;
     }
 
-    // 5. Cuộn màn hình mượt mà xuống khu vực Bảng Kết quả
+    // 4. Cuộn màn hình mượt mà xuống khu vực Bảng Kết quả
     const resultsContainer = document.getElementById('results-container');
     if (resultsContainer) {
         resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 };
-}

@@ -1,9 +1,14 @@
+import os
 import psycopg2
 import pandas as pd
 import numpy as np
 
 # Chuỗi kết nối tới Neon Cloud của bạn
-DATABASE_URL = "postgresql://neondb_owner:npg_WtqHZU8VIAz4@ep-lucky-flower-at6syakw-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+from dotenv import load_dotenv
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL chưa được cấu hình trong file .env — xem README.")
 
 # Giữ nguyên CODEC_MAPPING theo logic hệ thống của bạn
 CODEC_MAPPING = {

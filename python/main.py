@@ -163,6 +163,11 @@ async def get_recommendations(payload: RecommendRequest):
                 detail=f"Danh mục '{category}' không hợp lệ. Hệ thống chỉ hỗ trợ: TWS, WIRED, SPEAKER.",
             )
 
+        if payload.price_min is not None:
+            result_df = result_df[result_df["avg_price_vnd"] >= payload.price_min]
+        if payload.price_max is not None:
+            result_df = result_df[result_df["avg_price_vnd"] <= payload.price_max]
+
         if result_df.empty:
             return {"status": "empty", "count": 0, "data": []}
 

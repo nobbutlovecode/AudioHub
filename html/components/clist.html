@@ -1,26 +1,26 @@
-<div id="modal-clist" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] justify-center items-center">
-    <div class="modal-content bg-[var(--surface)] border border-[var(--primary)] shadow-[0_0_30px_var(--fx-glow)] rounded-xl max-w-2xl w-[90%] h-[75vh] p-8 relative flex flex-col">
-        <!-- Đổi dòng cũ thành dòng này trong clist.html -->
-        <button id="btn-run-compare" onclick="runCList()" class="w-full py-3.5 rounded-lg font-bold text-black uppercase tracking-widest bg-[var(--primary-grad)] hover:brightness-110 shadow-[0_0_15px_var(--fx-glow)] active:scale-[0.98] transition-all">
-            Run Comparison Algorithm
+<div id="modal-clist" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] justify-center items-center px-4">
+    <div class="modal-content bg-[var(--surface-glass)] backdrop-blur-xl border border-[var(--b-color)] shadow-[0_0_50px_var(--fx-glow)] rounded-2xl max-w-2xl w-full h-[75vh] p-8 relative flex flex-col animate-modal-in">
+
+        <button onclick="closeModal('modal-clist')" aria-label="Close" class="absolute top-5 right-5 text-[var(--text-sub)] hover:text-[var(--primary)] transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <h2 class="text-xl font-bold mb-1 text-gradient uppercase tracking-wider">Your Comparing List</h2>
+
+        <h2 class="text-xl font-black mb-1 text-gradient uppercase tracking-wider">Your Comparing List</h2>
         <p class="text-xs text-[var(--text-sub)] mb-4 pb-4 border-b border-[var(--b-color)]">
             Dữ liệu lưu tạm thời trên bộ nhớ (In-memory). Sẽ biến mất khi tải lại trang.
         </p>
-        
+
         <!-- Vùng chứa danh sách -->
         <div id="clist-items" class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
             <!-- Render từ JS -->
         </div>
-        
+
         <!-- Nút kích hoạt thuật toán -->
         <div class="pt-5 border-t border-[var(--b-color)] mt-auto">
-            <div class="pt-5 border-t border-[var(--b-color)] mt-auto">
-            <button id="btn-run-compare" onclick="runCList()" class="w-full py-3.5 rounded-lg font-bold text-black uppercase tracking-widest bg-[var(--primary-grad)] hover:brightness-110 shadow-[0_0_15px_var(--fx-glow)] active:scale-[0.98] transition-all">
+            <button id="btn-run-compare" onclick="runCList()" class="run-btn w-full py-3.5 rounded-lg font-bold text-[var(--bg-body)] uppercase tracking-widest bg-[var(--primary-grad)] hover:brightness-110 shadow-[0_0_15px_var(--fx-glow)] hover:shadow-[0_0_25px_var(--fx-glow)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Run Comparison Algorithm
             </button>
-        </div>
         </div>
     </div>
 </div>
