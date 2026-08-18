@@ -1,7 +1,7 @@
 import psycopg2
+from config import settings
 
-# Chuỗi kết nối của bạn
-DATABASE_URL = "postgresql://neondb_owner:npg_WtqHZU8VIAz4@ep-lucky-flower-at6syakw-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DATABASE_URL = settings.DATABASE_URL
 
 def rename_column():
     try:

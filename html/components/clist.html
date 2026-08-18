@@ -1,7 +1,7 @@
 <div id="modal-clist" class="modal-overlay hidden fixed inset-0 bg-black/80 backdrop-blur-md z-[100] justify-center items-center px-4">
     <div class="modal-content bg-[var(--surface-glass)] backdrop-blur-xl border border-[var(--b-color)] shadow-[0_0_50px_var(--fx-glow)] rounded-2xl max-w-2xl w-full h-[75vh] p-8 relative flex flex-col animate-modal-in">
 
-        <button onclick="closeModal('modal-clist')" aria-label="Close" class="absolute top-5 right-5 text-[var(--text-sub)] hover:text-[var(--primary)] transition-colors">
+        <button onclick="closeModal('modal-clist')" aria-label="Close" class="btn-icon absolute top-5 right-5">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
 
@@ -17,7 +17,7 @@
 
         <!-- Nút kích hoạt thuật toán -->
         <div class="pt-5 border-t border-[var(--b-color)] mt-auto">
-            <button id="btn-run-compare" onclick="runCList()" class="run-btn w-full py-3.5 rounded-lg font-bold text-[var(--bg-body)] uppercase tracking-widest bg-[var(--primary-grad)] hover:brightness-110 shadow-[0_0_15px_var(--fx-glow)] hover:shadow-[0_0_25px_var(--fx-glow)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <button id="btn-run-compare" onclick="runCList()" class="btn-primary run-btn w-full">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Run Comparison Algorithm
             </button>

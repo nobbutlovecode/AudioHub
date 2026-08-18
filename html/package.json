@@ -1,0 +1,13 @@
+{
+  "name": "audiohub-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build pipeline cho giao diện AudioHub — biên dịch Tailwind từ tailwind.config.js + src/input.css thành dist/output.css",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "watch": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.13"
+  }
+}
