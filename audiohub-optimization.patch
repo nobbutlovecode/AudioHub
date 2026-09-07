@@ -1,0 +1,744 @@
+diff --git a/.dockerignore b/.dockerignore
+index 6daa627..9bbc14d 100644
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -4,4 +4,10 @@ __pycache__/
+ .git
+ .gitignore
+ html/node_modules/
+-html/dist/
+\ No newline at end of file
++html/dist/
++# Dữ liệu seed chỉ dùng cho script migrate cục bộ (python/init_db.py),
++# KHÔNG cần thiết cho main.py lúc chạy production (data đọc từ Neon DB) —
++# loại khỏi image để giảm kích thước và tránh đóng gói dữ liệu kinh doanh
++# không cần thiết vào artifact triển khai.
++python/*.csv
++python/*.xlsx
+diff --git a/html/index.html b/html/index.html
+index 460acd5..1bff432 100644
+--- a/html/index.html
++++ b/html/index.html
+@@ -8,7 +8,6 @@
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="/html/dist/output.css">
+-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+ </head>
+ <body>
+ 
+@@ -264,6 +263,10 @@
+     <!-- JAVASCRIPT XỬ LÝ GIAO DIỆN & DỮ LIỆU       -->
+     <!-- ========================================== -->
+     <script>
++        // 0. Formatter dùng chung cho bảng kết quả (khởi tạo 1 lần, tránh việc
++        // `new Intl.NumberFormat(...)` lặp lại cho từng dòng trong forEach bên dưới).
++        const priceFormatter = new Intl.NumberFormat('vi-VN');
++
+         // 1. Hệ thống Theme (Cyan/Gold) + Độ sáng màu (Intensity) — CÓ LƯU LẠI (localStorage)
+         const DEFAULT_L = { cyan: 50, gold: 52 };
+ 
+@@ -409,19 +412,25 @@
+ 
+                 // ĐỔ DỮ LIỆU THẬT TỪ PYTHON VÀO BẢNG
+                 if (data && data.length > 0) {
+-                    data.forEach((item, index) => {
+-                        tbody.innerHTML += `
+-                            <tr class="hover:bg-[var(--bg-body)] transition-colors cursor-pointer group">
+-                                <td class="p-4 border-b border-[var(--b-color)] text-center font-black text-[var(--primary)]">#${index + 1}</td>
+-                                <td class="p-4 border-b border-[var(--b-color)] font-bold group-hover:text-[var(--primary)] transition-colors">${item.model_name}</td>
+-                                <td class="p-4 border-b border-[var(--b-color)]">
+-                                    <span class="bg-[var(--primary)]/20 text-[var(--primary)] px-2 py-1 rounded text-xs">${item.sound_signature || "Match"}</span>
+-                                </td>
+-                                <td class="p-4 border-b border-[var(--b-color)] text-[var(--text-sub)]">${new Intl.NumberFormat('vi-VN').format(item.avg_price_vnd)} ₫</td>
+-                                <td class="p-4 border-b border-[var(--b-color)] text-right font-black text-white">${Number(item.Final_score).toFixed(3)}</td>
+-                            </tr>
+-                        `;
+-                    });
++                    // TỐI ƯU: build mảng chuỗi HTML rồi gán innerHTML MỘT LẦN
++                    // ở cuối, thay vì `tbody.innerHTML += ...` bên trong
++                    // forEach. Mỗi lần dùng += là trình duyệt phải re-parse
++                    // lại TOÀN BỘ nội dung tbody hiện có rồi nối thêm — với
++                    // N dòng, thao tác đó tốn O(N²) thay vì O(N). Đồng thời
++                    // escapeHtml() các trường text để tránh HTML injection
++                    // nếu dữ liệu sản phẩm sau này chứa ký tự đặc biệt.
++                    const rowsHtml = data.map((item, index) => `
++                        <tr class="hover:bg-[var(--bg-body)] transition-colors cursor-pointer group">
++                            <td class="p-4 border-b border-[var(--b-color)] text-center font-black text-[var(--primary)]">#${index + 1}</td>
++                            <td class="p-4 border-b border-[var(--b-color)] font-bold group-hover:text-[var(--primary)] transition-colors">${escapeHtml(item.model_name)}</td>
++                            <td class="p-4 border-b border-[var(--b-color)]">
++                                <span class="bg-[var(--primary)]/20 text-[var(--primary)] px-2 py-1 rounded text-xs">${escapeHtml(item.sound_signature || "Match")}</span>
++                            </td>
++                            <td class="p-4 border-b border-[var(--b-color)] text-[var(--text-sub)]">${priceFormatter.format(item.avg_price_vnd)} ₫</td>
++                            <td class="p-4 border-b border-[var(--b-color)] text-right font-black text-white">${Number(item.Final_score).toFixed(3)}</td>
++                        </tr>
++                    `).join('');
++                    tbody.innerHTML = rowsHtml;
+                 } else {
+                     tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-400">No items found matching your criteria.</td></tr>`;
+                 }
+diff --git a/html/js/app.js b/html/js/app.js
+index 62cbb24..245ee57 100644
+--- a/html/js/app.js
++++ b/html/js/app.js
+@@ -2,20 +2,41 @@
+  * AUDIOHUB - CENTRAL LOGIC (ENTERPRISE PATTERN)
+  */
+ 
++// Escape các ký tự HTML đặc biệt trước khi chèn dữ liệu động vào innerHTML.
++// TỐI ƯU/BẢO MẬT: model_name, brand... đến từ DB và được ghép thẳng vào
++// innerHTML ở nhiều nơi (renderCList, dropdown search, bảng kết quả). Nếu
++// một ngày dữ liệu (hoặc người nhập liệu) lỡ chứa ký tự "<"/"\"" thì nội
++// dung đó sẽ bị trình duyệt hiểu thành HTML/thuộc tính thay vì text thuần —
++// escapeHtml() chặn việc này ở một chỗ duy nhất, dùng lại được ở mọi nơi.
++function escapeHtml(value) {
++    const div = document.createElement('div');
++    div.textContent = value ?? '';
++    return div.innerHTML;
++}
++
+ // --- 1. TỰ ĐỘNG NHÚNG CÁC COMPONENTS (MODALS) ---
+ async function loadComponents() {
+     const components = ['about.html', 'donate.html', 'clist.html'];
+     const injector = document.getElementById('modals-injector');
+-    
+-    for (let file of components) {
+-        try {
+-            const res = await fetch(`/html/components/${file}`);
+-            const html = await res.text();
+-            injector.insertAdjacentHTML('beforeend', html);
+-        } catch (error) {
+-            console.error(`Lỗi khi load component ${file}:`, error);
+-        }
+-    }
++
++    // TỐI ƯU: trước đây dùng `for...await` nên 3 file được tải TUẦN TỰ
++    // (fetch xong file này mới bắt đầu fetch file kế). Vì 3 request độc
++    // lập với nhau, Promise.all cho phép trình duyệt gửi cả 3 request
++    // song song — tổng thời gian tải giảm còn ~thời gian của request
++    // chậm nhất thay vì tổng cả 3, đồng thời vẫn giữ đúng THỨ TỰ chèn vào
++    // DOM (about → donate → clist) nhờ await theo đúng thứ tự mảng kết quả.
++    const results = await Promise.all(
++        components.map(async (file) => {
++            try {
++                const res = await fetch(`/html/components/${file}`);
++                return await res.text();
++            } catch (error) {
++                console.error(`Lỗi khi load component ${file}:`, error);
++                return '';
++            }
++        })
++    );
++    injector.insertAdjacentHTML('beforeend', results.join(''));
+ }
+ 
+ // Khởi chạy khi DOM tải xong
+@@ -92,12 +113,16 @@ function renderCList() {
+         return;
+     }
+ 
++    // TỐI ƯU: build mảng chuỗi rồi join 1 lần thay vì set innerHTML lặp lại
++    // trong .map() — .map().join('') vốn đã làm đúng điều này (khác với
++    // pattern += trong vòng lặp ở dưới), giữ nguyên nhưng thêm escapeHtml()
++    // cho các trường text động (category, model_name, brand).
+     container.innerHTML = cListMemory.map(item => `
+         <div class="bg-[var(--bg-body)] p-3 border border-[var(--b-color)] rounded-lg flex justify-between items-center group transition-colors hover:border-[var(--primary)]">
+             <div>
+-                <div class="text-[10px] text-[var(--primary)] font-bold uppercase mb-0.5">${item.category}</div>
+-                <div class="font-bold text-sm text-[var(--text-main)]">${item.model_name}</div>
+-                <div class="text-xs text-[var(--text-sub)]">${item.brand}</div>
++                <div class="text-[10px] text-[var(--primary)] font-bold uppercase mb-0.5">${escapeHtml(item.category)}</div>
++                <div class="font-bold text-sm text-[var(--text-main)]">${escapeHtml(item.model_name)}</div>
++                <div class="text-xs text-[var(--text-sub)]">${escapeHtml(item.brand)}</div>
+             </div>
+             <button onclick="removeFromCList(${item.id})" class="text-red-500 hover:text-red-400 p-2 opacity-50 hover:opacity-100 transition-all">
+                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+@@ -110,6 +135,9 @@ function renderCList() {
+ const searchInput = document.getElementById('searchInput');
+ const searchDropdown = document.getElementById('searchDropdown');
+ let searchTimeout;
++// TỐI ƯU: tạo formatter 1 lần, dùng lại cho mọi item thay vì `new
++// Intl.NumberFormat(...)` bên trong .map() mỗi lần render dropdown.
++const vndFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+ 
+ if (searchInput) {
+     searchInput.addEventListener('input', (e) => {
+@@ -124,8 +152,11 @@ if (searchInput) {
+         // Debounce 300ms
+         searchTimeout = setTimeout(async () => {
+             try {
+-                // Đảm bảo API này đã có trên Backend FastAPI
+-                const res = await fetch(`/api/v1/search?q=${query}`);
++                // FIX: encodeURIComponent(query) — trước đây query được nối
++                // thẳng vào URL. Với các ký tự như "&", "#", "+", hoặc dấu
++                // tiếng Việt gõ tắt, chuỗi query string sẽ bị cắt/đọc sai
++                // ở phía server (ví dụ "&" bị hiểu là bắt đầu param khác).
++                const res = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}`);
+                 const result = await res.json();
+                 
+                 if(result.status === "success" && result.data.length > 0) {
+@@ -136,8 +167,8 @@ if (searchInput) {
+                             <li class="p-4 border-b border-[var(--b-color)] hover:bg-[#1A1A1A] cursor-pointer flex justify-between items-center transition-colors"
+                                 onclick="addToCList('${encodedItem}'); document.getElementById('searchInput').value=''; document.getElementById('searchDropdown').classList.add('hidden');">
+                                 <div>
+-                                    <div class="font-bold text-[var(--text-main)]">${item.model_name}</div>
+-                                    <div class="text-xs text-[var(--text-sub)] font-normal mt-0.5">by ${item.brand} • <span style="color:var(--primary)">${new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(item.price_vnd)}</span></div>
++                                    <div class="font-bold text-[var(--text-main)]">${escapeHtml(item.model_name)}</div>
++                                    <div class="text-xs text-[var(--text-sub)] font-normal mt-0.5">by ${escapeHtml(item.brand)} • <span style="color:var(--primary)">${vndFormatter.format(item.price_vnd)}</span></div>
+                                 </div>
+                                 <span class="text-[10px] px-2 py-1 bg-[var(--b-color)] text-[var(--primary)] rounded font-bold transition-transform hover:scale-105">+ ADD C-LIST</span>
+                             </li>
+@@ -145,7 +176,7 @@ if (searchInput) {
+                     }).join('');
+                     searchDropdown.classList.remove('hidden');
+                 } else {
+-                    searchDropdown.innerHTML = `<li class="p-4 text-sm text-[var(--text-sub)] italic">No devices found matching "${query}".</li>`;
++                    searchDropdown.innerHTML = `<li class="p-4 text-sm text-[var(--text-sub)] italic">No devices found matching "${escapeHtml(query)}".</li>`;
+                     searchDropdown.classList.remove('hidden');
+                 }
+             } catch(err) {
+diff --git a/import os.txt b/import os.txt
+deleted file mode 100644
+index 67f3f26..0000000
+--- a/import os.txt	
++++ /dev/null
+@@ -1,236 +0,0 @@
+-import os
+-import math
+-import psycopg2
+-from psycopg2.extras import DictCursor
+-import pandas as pd
+-
+-# Cấu hình chuỗi kết nối tới Neon DB (Thay bằng biến môi trường của bạn)
+-DATABASE_URL = "postgresql://neondb_owner:npg_WtqHZU8VIAz4@ep-lucky-flower-at6syakw-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+-CODEC_MAPPING = {
+-    'sbc' : 1, 'aac' : 2, 'aptx hd' : 3, 'aptx adaptive' : 4, 'ldac' : 5, 'ldhc' : 5
+-}
+-def init_database():
+-    """Khởi tạo cấu trúc bảng dựa trên schema của bạn"""
+-    print("[-] Đang kết nối và khởi tạo cấu trúc bảng trên cloud...")
+-    
+-    # Thêm lệnh DROP TABLE ở đầu để làm sạch cấu trúc cũ, giữ nguyên comment của bạn
+-    schema_sql = """
+-    DROP TABLE IF EXISTS specs_tws CASCADE;
+-    DROP TABLE IF EXISTS specs_wired CASCADE;
+-    DROP TABLE IF EXISTS specs_speakers CASCADE;
+-    DROP TABLE IF EXISTS audio_products CASCADE;
+-    DROP TABLE IF EXISTS categories CASCADE;
+-
+-    -- 1. Bảng danh mục để phân loại thiết bị
+-    CREATE TABLE categories (
+-        id SERIAL PRIMARY KEY,
+-        name VARCHAR(50) NOT NULL UNIQUE -- Thêm UNIQUE để tránh trùng lặp danh mục
+-    );
+-
+-    -- 2. Bảng sản phẩm gốc (Chứa thông tin chung)
+-    CREATE TABLE audio_products (
+-        id SERIAL PRIMARY KEY,
+-        category_id INT REFERENCES categories(id),
+-        model_name VARCHAR(100) NOT NULL,
+-        brand VARCHAR(50) NOT NULL,
+-        price_vnd INT NOT NULL,
+-        sound_signature VARCHAR(30), -- Bass-heavy, Neutral, V-Shape, Warm
+-        review_summary TEXT
+-    );
+-
+-    -- 3. Bảng thông số riêng cho Tai nghe không dây (TWS)
+-    CREATE TABLE specs_tws (
+-        product_id INT PRIMARY KEY REFERENCES audio_products(id) ON DELETE CASCADE,
+-        anc_depth_db INT DEFAULT 0,
+-        battery_life_total INT,
+-        codec_score INT -- SBC=1, AAC=2, aptX=3, LDAC=5
+-    );
+-
+-    -- 4. Bảng thông số riêng cho Tai nghe có dây (Wired)
+-    CREATE TABLE specs_wired (
+-        product_id INT PRIMARY KEY REFERENCES audio_products(id) ON DELETE CASCADE,
+-        impedance_ohm INT, -- Trở kháng (Ví dụ: 16, 32, 80 Ohm)
+-        sensitivity_db INT, -- Độ nhạy
+-        connector_type VARCHAR(20) -- 3.5mm, Type-C, 2-pin, MMCX
+-    );
+-
+-    -- 5. Bảng thông số riêng cho Loa (Speakers)
+-    CREATE TABLE specs_speakers (
+-        product_id INT PRIMARY KEY REFERENCES audio_products(id) ON DELETE CASCADE,
+-        power_watts INT, -- Công suất (Ví dụ: 20W, 40W, 100W)
+-        connection_type VARCHAR(50), -- Bluetooth, AUX, Optical, RCA
+-        speaker_type VARCHAR(30) -- Portable (Di động), Bookshelf, Soundbar
+-    );
+-    """
+-    
+-    try:
+-        conn = psycopg2.connect(DATABASE_URL)
+-        cur = conn.cursor()
+-        cur.execute(schema_sql)
+-        conn.commit()
+-        cur.close()
+-        conn.close()
+-        print("[✓] Khởi tạo cấu trúc bảng thành công!")
+-    except Exception as e:
+-        print(f"[X] Lỗi khởi tạo Database: {e}")
+-
+-def clean_val(val, target_type=str):
+-    """Hàm bổ trợ để dọn dẹp giá trị NaN từ Pandas sang None (NULL trong SQL)"""
+-    if pd.isna(val) or val == "" or (isinstance(val, float) and math.isnan(val)):
+-        return None
+-    try:
+-        return target_type(val)
+-    except:
+-        return None
+-
+-def migration_data():
+-    """Bóc tách dữ liệu từ CSV và phân phối vào các bảng quan hệ tương ứng"""
+-    filename = "audio_gear.csv"
+-    
+-    # 1. Kiểm tra chính xác bản chất file bằng 4 byte đầu tiên (Magic Bytes)
+-    is_excel = False
+-    try:
+-        with open(filename, "rb") as f:
+-            start_bytes = f.read(4)
+-            if start_bytes == b"PK\x03\x04": # Chữ ký chuẩn của file Excel/Zip
+-                is_excel = True
+-    except FileNotFoundError:
+-        print(f"[X] Lỗi: Không tìm thấy file '{filename}' trong thư mục này!")
+-        return
+-
+-    # 2. Tiến hành đọc file theo đúng định dạng thực tế của nó
+-    if is_excel:
+-        print("[-] Phát hiện 'audio_gear.csv' thực chất là file Excel (.xlsx). Đang đọc bằng bộ mã Excel...")
+-        try:
+-            df = pd.read_excel(filename, engine="openpyxl")
+-        except ImportError:
+-            print("[X] Lỗi: Thiếu thư viện 'openpyxl' để đọc file Excel.")
+-            print("[>] Vui lòng chạy lệnh này ngoài terminal: pip install openpyxl")
+-            return
+-        except Exception as e:
+-            print(f"[X] Không thể đọc file Excel: {e}")
+-            return
+-    else:
+-        print("[-] Đang đọc file 'audio_gear.csv' dưới dạng CSV thô...")
+-        try:
+-            df = pd.read_csv(filename, encoding="utf-8-sig", sep=None, engine='python', on_bad_lines='skip')
+-        except Exception:
+-            try:
+-                df = pd.read_csv(filename, encoding="latin1", sep=None, engine='python', on_bad_lines='skip')
+-            except Exception as e:
+-                print(f"[X] Không thể đọc file CSV: {e}")
+-                return
+-
+-    # 3. Chuẩn hóa tên cột về chữ thường và xóa khoảng trắng thừa
+-    df.columns = df.columns.str.strip().str.lower()
+-    print("[+] Các cột tìm thấy trong file:", df.columns.tolist())
+-    
+-    # Kiểm tra cột bắt buộc
+-    if 'category' not in df.columns:
+-        print(f"[X] Lỗi: File dữ liệu thiếu hẳn cột 'category'. Các cột hiện tại: {df.columns.tolist()}")
+-        return
+-
+-    print("[-] Đang bóc tách dữ liệu từ file để đẩy lên Cloud...")
+-
+-    # Chuẩn hóa tên cột về chữ thường và xóa khoảng trắng thừa
+-    df.columns = df.columns.str.strip().str.lower()
+-    
+-    # ... Các đoạn code xử lý dữ liệu và đẩy lên DB phía dưới giữ nguyên 100% ...
+-
+-    # Chuẩn hóa tên cột về chữ thường và xóa khoảng trắng thừa
+-    df.columns = df.columns.str.strip().str.lower()
+-    
+-    # Kiểm tra cột bắt buộc
+-    if 'category' not in df.columns:
+-        print(f"[X] Lỗi: File CSV thiếu cột 'category'. Các cột hiện tại: {df.columns.tolist()}")
+-        return
+-
+-    print("[-] Đang bóc tách dữ liệu từ file CSV để đẩy lên Cloud...")
+-    
+-    try:
+-        conn = psycopg2.connect(DATABASE_URL)
+-        cur = conn.cursor(cursor_factory=DictCursor)
+-        
+-        success_count = 0
+-
+-        for _, row in df.iterrows():
+-            # 1. Xử lý phần Category danh mục
+-            cat_raw = clean_val(row.get('category'))
+-            if not cat_raw:
+-                continue # Bỏ qua nếu dòng này không có danh mục
+-            
+-            # Chuẩn hóa đầu vào danh mục trùng khớp với comment thiết kế của bạn
+-            cat_name = cat_raw.strip()
+-            if cat_name.lower() in ['tws', 'tai nghe không dây']:
+-                cat_name = 'TWS'
+-            elif cat_name.lower() in ['wired earphone', 'wired', 'tai nghe có dây']:
+-                cat_name = 'Wired Earphone'
+-            elif cat_name.lower() in ['speaker', 'loa']:
+-                cat_name = 'Speaker'
+-
+-            # Tìm hoặc tạo mới Category ID
+-            cur.execute("INSERT INTO categories (name) VALUES (%s) ON CONFLICT (name) DO NOTHING;", (cat_name,))
+-            cur.execute("SELECT id FROM categories WHERE name = %s;", (cat_name,))
+-            category_id = cur.fetchone()['id']
+-
+-            # 2. Chèn vào bảng sản phẩm gốc audio_products
+-            model_name = clean_val(row.get('model_name'))
+-            brand = clean_val(row.get('brand'), str) or "Unknown"
+-            price_vnd = clean_val(row.get('price_vnd'), int) or 0
+-            sound_sig = clean_val(row.get('sound_signature'))
+-            review_sum = clean_val(row.get('review_summary'))
+-
+-            if not model_name:
+-                continue # Bỏ qua nếu không có tên sản phẩm
+-
+-            insert_product_sql = """
+-            INSERT INTO audio_products (category_id, model_name, brand, price_vnd, sound_signature, review_summary)
+-            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
+-            """
+-            cur.execute(insert_product_sql, (category_id, model_name, brand, price_vnd, sound_sig, review_sum))
+-            product_id = cur.fetchone()['id']
+-
+-            # 3. Rẽ nhánh chèn thông số kỹ thuật đặc trưng dựa vào Category
+-            if cat_name == 'TWS':
+-                anc = clean_val(row.get('anc_depth_db'), int) or 0
+-                battery = clean_val(row.get('battery_life_total'), int)
+-                codec = clean_val(row.get('codec_score'), int)
+-                
+-                cur.execute(
+-                    "INSERT INTO specs_tws (product_id, anc_depth_db, battery_life_total, codec_score) VALUES (%s, %s, %s, %s);",
+-                    (product_id, anc, battery, codec)
+-                )
+-
+-            elif cat_name == 'Wired Earphone':
+-                impedance = clean_val(row.get('impedance_ohm'), int)
+-                sensitivity = clean_val(row.get('sensitivity_db'), int)
+-                connector = clean_val(row.get('connector_type'))
+-                
+-                cur.execute(
+-                    "INSERT INTO specs_wired (product_id, impedance_ohm, sensitivity_db, connector_type) VALUES (%s, %s, %s, %s);",
+-                    (product_id, impedance, sensitivity, connector)
+-                )
+-
+-            elif cat_name == 'Speaker':
+-                power = clean_val(row.get('power_watts'), int)
+-                connection = clean_val(row.get('connection_type'))
+-                speaker_type = clean_val(row.get('speaker_type'))
+-                
+-                cur.execute(
+-                    "INSERT INTO specs_speakers (product_id, power_watts, connection_type, speaker_type) VALUES (%s, %s, %s, %s);",
+-                    (product_id, power, connection, speaker_type)
+-                )
+-                
+-            success_count += 1
+-
+-        conn.commit()
+-        cur.close()
+-        conn.close()
+-        print(f"[✓] Đồng bộ dữ liệu thành công! Đã đẩy {success_count} sản phẩm lên Neon Cloud DB.")
+-
+-    except Exception as e:
+-        print(f"[X] Lỗi trong quá trình Migration dữ liệu: {e}")
+-
+-if __name__ == "__main__":
+-    init_database()
+-    migration_data()
+\ No newline at end of file
+diff --git a/python/database.py b/python/database.py
+index 31a154c..c222378 100644
+--- a/python/database.py
++++ b/python/database.py
+@@ -2,21 +2,44 @@ import psycopg2
+ import pandas as pd
+ from config import settings
+ 
+-def get_all_products_from_db():
++# Các cột bắt buộc mà recommender.py/main.py cần để tính điểm.
++# Đặt tập trung ở đây (thay vì lặp lại trong main.py) để tránh 2 nơi
++# có thể "lệch pha" khi có người sửa 1 chỗ mà quên chỗ còn lại.
++REQUIRED_COLUMNS_WITH_DEFAULTS = {
++    "avg_price_vnd": 0,
++    "battery_life_total": 0,
++    "codec_score": 1,
++    "ip_rating": "None",
++    "anc_type": "None",
++    "anc_depth_db": 0,
++    "power_watts": 0,
++}
++
++
++def get_all_products_from_db() -> pd.DataFrame:
+     """
+-    Kết nối tới Neon Postgres DB, lấy toàn bộ dữ liệu bảng audio_gear
+-    và trả về dưới dạng Pandas DataFrame.
++    Kết nối tới Neon Postgres DB, lấy toàn bộ dữ liệu bảng audio_gear,
++    bù các cột còn thiếu bằng giá trị mặc định an toàn, và trả về
++    dưới dạng Pandas DataFrame sẵn sàng để AudioRecommender sử dụng.
+     """
+     print("🔌 [DATABASE] Đang thiết lập kết nối tới Neon DB...")
+     try:
+         # Sử dụng cấu hình từ file config.py
+-        conn = psycopg2.connect(settings.DATABASE_URL)
+-        query = "SELECT * FROM audio_gear;"
+-        
+-        # Đọc thẳng dữ liệu từ SQL vào Pandas DataFrame
+-        df = pd.read_sql(query, conn)
+-        conn.close()
+-        
++        with psycopg2.connect(settings.DATABASE_URL) as conn:
++            df = pd.read_sql("SELECT * FROM audio_gear;", conn)
++
++        # BẪY TỰ VỆ (FALLBACK): đảm bảo các cột thuật toán cần luôn tồn tại,
++        # kể cả khi schema DB tạm thời thiếu cột nào đó.
++        for col, default_val in REQUIRED_COLUMNS_WITH_DEFAULTS.items():
++            if col not in df.columns:
++                df[col] = default_val
++
++        # Chuẩn hoá sẵn 2 cột tìm kiếm không dấu-hoa/thường ngay tại đây,
++        # thay vì tính lại trên toàn bộ bảng ở MỖI request /api/v1/search.
++        df["model_name_clean"] = df.get("model_name", "").fillna("").astype(str).str.lower()
++        df["brand_clean"] = df.get("brand", "").fillna("").astype(str).str.lower()
++
++        print(f"✅ [DATABASE] Đã nạp thành công {len(df)} sản phẩm.")
+         return df
+     except Exception as e:
+         print(f"❌ [DATABASE] Thất bại khi nạp dữ liệu từ Neon DB: {e}")
+diff --git a/python/main.py b/python/main.py
+index 5615ffd..6b34840 100644
+--- a/python/main.py
++++ b/python/main.py
+@@ -1,27 +1,18 @@
+ import os
+-import pandas as pd
+-import psycopg2
+ from contextlib import asynccontextmanager
+-from dotenv import load_dotenv
+-from fastapi import FastAPI, HTTPException, status
++from fastapi import FastAPI, HTTPException, Query, status
+ from fastapi.middleware.cors import CORSMiddleware
+ from fastapi.staticfiles import StaticFiles
+ from fastapi.responses import FileResponse
+ 
+-# Cấu hình đường dẫn tuyệt đối cho HTML
+-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+-HTML_DIR = os.path.abspath(os.path.join(BASE_DIR,"..", "html"))
+-
+ # Đảm bảo đường dẫn gói chính xác theo cấu trúc thư mục python/ của bạn
++from database import get_all_products_from_db
+ from recommender import AudioRecommender
+ from schemas import RecommendRequest
+ 
+-from fastapi import Query
+-
+-
+-# Nạp biến môi trường từ file .env (ở local) hoặc cấu hình hệ thống (ở Cloud Render)
+-load_dotenv()
+-DATABASE_URL = os.getenv("DATABASE_URL")
++# Cấu hình đường dẫn tuyệt đối cho HTML
++BASE_DIR = os.path.dirname(os.path.abspath(__file__))
++HTML_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "html"))
+ 
+ # Bộ nhớ đệm toàn cục trên RAM để lưu trữ dữ liệu thiết bị thô từ Neon DB
+ GLOBAL_PRODUCT_DF = None
+@@ -31,31 +22,9 @@ GLOBAL_PRODUCT_DF = None
+ async def lifespan(api_python: FastAPI):
+     global GLOBAL_PRODUCT_DF
+     print("🔌 [WEB SERVER] Đang kết nối Neon DB và nạp dữ liệu lên RAM Cache...")
+-    try:
+-        conn = psycopg2.connect(DATABASE_URL)
+-        query = "SELECT * FROM audio_gear;"
+-        raw_df = pd.read_sql(query, conn)
+-        conn.close()
+-
+-        # BẪY TỰ VỆ (FALLBACK)
+-        required_cols = {
+-            "avg_price_vnd": 0, 
+-            "battery_life_total": 0,
+-            "codec_score": 1,
+-            "ip_rating": "None",
+-            "anc_type": "None",
+-            "anc_depth_db": 0,
+-            "power_watts": 0
+-        }
+-        for col, default_val in required_cols.items():
+-            if col not in raw_df.columns:
+-                raw_df[col] = default_val
+-
+-        GLOBAL_PRODUCT_DF = raw_df
+-        print(f"✅ [RAM CACHE] Đã nạp thành công {len(raw_df)} sản phẩm. Hệ thống sẵn sàng tính toán!")
+-    except Exception as e:
+-        print(f"❌ Thất bại khi nạp dữ liệu từ Neon DB: {e}")
+-        GLOBAL_PRODUCT_DF = pd.DataFrame()
++    # Toàn bộ logic kết nối + fallback cột + chuẩn hoá cột tìm kiếm giờ nằm
++    # DUY NHẤT trong database.py (dùng chung với mọi nơi khác cần dữ liệu này).
++    GLOBAL_PRODUCT_DF = get_all_products_from_db()
+     yield
+ 
+ 
+@@ -65,10 +34,14 @@ api_service = FastAPI(
+ )
+ 
+ # Cấu hình CORS
++# Đây là API đọc dữ liệu công khai (không cookie/session), nên KHÔNG cần
++# allow_credentials=True. Bật kèm allow_origins=["*"] vừa thừa vừa là cấu
++# hình CORS không hợp lệ về mặt spec (trình duyệt sẽ chặn khi credentials
++# được bật cùng wildcard origin) — tắt đi cho đúng với thực tế sử dụng.
+ api_service.add_middleware(
+     CORSMiddleware,
+     allow_origins=["*"],
+-    allow_credentials=True,
++    allow_credentials=False,
+     allow_methods=["*"],
+     allow_headers=["*"],
+ )
+@@ -102,15 +75,20 @@ async def search_products(q: str = Query("", description="Từ khóa tìm kiếm
+         return {"status": "success", "data": []}
+ 
+     try:
+-        df = GLOBAL_PRODUCT_DF.copy()
+-        
+-        # Tiền xử lý: Ép kiểu string và xử lý NaN để tránh crash thuật toán tìm kiếm
+-        df['model_name_clean'] = df['model_name'].fillna('').astype(str).str.lower()
+-        df['brand_clean'] = df['brand'].fillna('').astype(str).str.lower()
+-        
+-        # Tìm kiếm chuỗi con (contains)
+-        mask = df['model_name_clean'].str.contains(query) | df['brand_clean'].str.contains(query)
+-               
++        # Không copy() + không tính lại model_name_clean/brand_clean ở đây nữa:
++        # 2 cột này đã được chuẩn hoá 1 LẦN DUY NHẤT khi nạp dữ liệu trong
++        # database.py, nên mỗi request search chỉ còn tốn công lọc (mask),
++        # thay vì phải str.lower() lại toàn bộ bảng mỗi lần người dùng gõ phím.
++        df = GLOBAL_PRODUCT_DF
++
++        # regex=False: coi q là chuỗi con thuần tuý, không phải regex.
++        # Nếu để mặc định (regex=True), một ký tự người dùng gõ như "(" hoặc
++        # "+" sẽ khiến pandas cố biên dịch regex và raise lỗi (trước đây bị
++        # nuốt gọn bởi except Exception ở dưới, trả về lỗi chung chung).
++        # na=False: phòng trường hợp cột có giá trị NaN sót lại.
++        mask = df['model_name_clean'].str.contains(query, regex=False, na=False) | \
++               df['brand_clean'].str.contains(query, regex=False, na=False)
++
+         search_result = df[mask].head(6) # Trả về tối đa 6 kết quả để UI không bị tràn
+         
+         # Kiểm tra nếu DB của bạn không có cột 'id' thì lấy index làm ID tạm
+diff --git a/python/recommender.py b/python/recommender.py
+index ff5741e..13a93dd 100644
+--- a/python/recommender.py
++++ b/python/recommender.py
+@@ -19,43 +19,6 @@ class AudioRecommender:
+         else:
+             return (x_max - series) / (x_max - x_min)
+ 
+-    def redistribute_weights(self, base_weights, target_key, new_value):
+-        """ 
+-        Thuật toán tái phân phối trọng số động (Bảo toàn tỷ lệ)
+-        Đảm bảo tổng luôn bằng 1.0 và giữ nguyên giá trị new_value của slider mục tiêu
+-        """
+-        weights = base_weights.copy()
+-        if target_key not in weights:
+-            return weights
+-        
+-        # Đảm bảo giá trị mới nằm trong khoảng an toàn [0, 1]
+-        new_value = max(0.0, min(1.0, float(new_value)))
+-        weights[target_key] = new_value
+-        
+-        other_keys = [k for k in weights.keys() if k != target_key]
+-        if not other_keys:
+-            weights[target_key] = 1.0
+-            return weights
+-            
+-        remaining_sum = 1.0 - new_value
+-        other_sum = sum(base_weights[k] for k in other_keys)
+-        
+-        if other_sum > 0:
+-            # Phân bổ tỷ lệ thuận theo giá trị cũ của các slider còn lại
+-            for k in other_keys:
+-                weights[k] = (base_weights[k] / other_sum) * remaining_sum
+-        else:
+-            # Nếu tất cả các slider còn lại đều bằng 0, thực hiện chia đều phần còn lại
+-            for k in other_keys:
+-                weights[k] = remaining_sum / len(other_keys)
+-                
+-        # Khử sai số dấu phẩy động của máy tính để làm tròn tuyệt đối về 1.0
+-        total = sum(weights.values())
+-        if abs(total - 1.0) > 1e-6:
+-            for k in weights.keys():
+-                weights[k] = round(weights[k] / total, 4)
+-        return weights
+-
+     def normalize_material(self, text):
+         """Phân loại chuỗi ký tự vật lý vật liệu màng loa"""
+         if pd.isna(text) or not str(text).strip(): 
+@@ -166,8 +129,7 @@ class AudioRecommender:
+         df_tws["S_ip"] = df_tws["ip_rating"].apply(self._get_ip_score)
+         df_tws["S_sound"] = df_tws["sound_signature"].apply(lambda x: self._calculate_sound_match(x, user_pref))
+ 
+-        # --- ĐỔI MỚI LOGIC CHẤM ĐIỂM ANC ---
+-        anc_scores = []
++        # --- LOGIC CHẤM ĐIỂM ANC (đã vector hóa bằng NumPy/Pandas) ---
+         # Lọc danh sách thiết bị có chống ồn dạng cố định (fixed/standard) để tìm biên độ chia điểm số
+         fixed_mask = (~df_tws["anc_type"].astype(str).str.strip().str.lower().isin(["none", "adaptive"])) & (df_tws["anc_depth_db"] > 0)
+         fixed_devices = df_tws[fixed_mask]
+@@ -175,23 +137,27 @@ class AudioRecommender:
+         min_fixed = fixed_devices["anc_depth_db"].min() if not fixed_devices.empty else 0
+         max_fixed = fixed_devices["anc_depth_db"].max() if not fixed_devices.empty else 0
+ 
+-        for _, row in df_tws.iterrows():
+-            anc_type = str(row.get("anc_type", "None")).strip().lower()
+-            anc_depth = float(row.get("anc_depth_db", 0))
+-            
+-            if anc_type == "none" or anc_depth == 0:
+-                anc_scores.append(0.0)
+-            elif anc_type == "adaptive":
+-                anc_scores.append(0.8)  # Cố định mức 0.8 cho Adaptive ANC theo yêu cầu
+-            else:
+-                # Dành cho Fixed ANC: Chuẩn hóa đưa về không gian [0.4, 1.0] để luôn vượt trội hơn mức None (0.0)
+-                if max_fixed == min_fixed:
+-                    anc_scores.append(0.7)
+-                else:
+-                    score = 0.4 + 0.6 * (anc_depth - min_fixed) / (max_fixed - min_fixed)
+-                    anc_scores.append(score)
+-                    
+-        df_tws["S_anc"] = pd.Series(anc_scores, index=df_tws.index)
++        # TỐI ƯU: thay vòng lặp Python `for _, row in df_tws.iterrows(): ...`
++        # bằng phép tính vector hóa trên toàn cột cùng lúc. iterrows() phải
++        # tạo lại một Series Python cho MỖI dòng nên chậm hơn hàng chục lần
++        # so với thao tác trên toàn mảng NumPy bên dưới — với catalog vài
++        # trăm/nghìn sản phẩm, khác biệt càng rõ khi mỗi request /recommend
++        # đều chạy lại toàn bộ hàm chấm điểm này.
++        anc_type_clean = df_tws["anc_type"].astype(str).str.strip().str.lower()
++        anc_depth = pd.to_numeric(df_tws["anc_depth_db"], errors="coerce").fillna(0.0)
++
++        is_none = (anc_type_clean == "none") | (anc_depth == 0)
++        is_adaptive = anc_type_clean == "adaptive"
++
++        if max_fixed == min_fixed:
++            fixed_score = pd.Series(0.7, index=df_tws.index)
++        else:
++            fixed_score = 0.4 + 0.6 * (anc_depth - min_fixed) / (max_fixed - min_fixed)
++
++        df_tws["S_anc"] = pd.Series(
++            np.select([is_none, is_adaptive], [0.0, 0.8], default=fixed_score),
++            index=df_tws.index,
++        )
+ 
+         # Mẫu trọng số mặc định của hệ thống
+         default_weights = {
+diff --git a/python/schemas.py b/python/schemas.py
+index f7a628f..2b86ace 100644
+--- a/python/schemas.py
++++ b/python/schemas.py
+@@ -1,4 +1,4 @@
+-from pydantic import BaseModel
++from pydantic import BaseModel, Field
+ from typing import Dict, Any, Optional
+ 
+ class RecommendRequest(BaseModel):
+@@ -9,4 +9,8 @@ class RecommendRequest(BaseModel):
+                                                       # không bao giờ được gọi tới (đây chính là bug C-List).
+     price_min: Optional[float] = None  # FIX: được frontend gửi lên nhưng trước đây không có trong schema
+     price_max: Optional[float] = None  # -> Pydantic mặc định bỏ qua field lạ, filter giá coi như vô dụng.
+-    limit: int = 5                 # Số lượng sản phẩm tối ưu trả về (mặc định lấy top 5)
+\ No newline at end of file
++    # TỐI ƯU: giới hạn cứng 1-50 bằng Field(ge=..., le=...) thay vì int trần.
++    # Trước đây limit không có chặn trên, một client gửi limit: 999999 vẫn
++    # được FastAPI chấp nhận (dù .head() không sập, đây vẫn là input không
++    # được validate — để ngỏ rủi ro nếu sau này endpoint đổi cách dùng limit).
++    limit: int = Field(default=5, ge=1, le=50)  # Số lượng sản phẩm tối ưu trả về (mặc định lấy top 5)
+\ No newline at end of file
