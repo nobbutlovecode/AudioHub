@@ -1,27 +1,18 @@
 import os
-import pandas as pd
-import psycopg2
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-# Cấu hình đường dẫn tuyệt đối cho HTML
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-HTML_DIR = os.path.abspath(os.path.join(BASE_DIR,"..", "html"))
-
 # Đảm bảo đường dẫn gói chính xác theo cấu trúc thư mục python/ của bạn
+from database import get_all_products_from_db
 from recommender import AudioRecommender
 from schemas import RecommendRequest
 
-from fastapi import Query
-
-
-# Nạp biến môi trường từ file .env (ở local) hoặc cấu hình hệ thống (ở Cloud Render)
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Cấu hình đường dẫn tuyệt đối cho HTML
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+HTML_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "html"))
 
 # Bộ nhớ đệm toàn cục trên RAM để lưu trữ dữ liệu thiết bị thô từ Neon DB
 GLOBAL_PRODUCT_DF = None
@@ -31,31 +22,9 @@ GLOBAL_PRODUCT_DF = None
 async def lifespan(api_python: FastAPI):
     global GLOBAL_PRODUCT_DF
     print("🔌 [WEB SERVER] Đang kết nối Neon DB và nạp dữ liệu lên RAM Cache...")
-    try:
-        conn = psycopg2.connect(DATABASE_URL)
-        query = "SELECT * FROM audio_gear;"
-        raw_df = pd.read_sql(query, conn)
-        conn.close()
-
-        # BẪY TỰ VỆ (FALLBACK)
-        required_cols = {
-            "avg_price_vnd": 0, 
-            "battery_life_total": 0,
-            "codec_score": 1,
-            "ip_rating": "None",
-            "anc_type": "None",
-            "anc_depth_db": 0,
-            "power_watts": 0
-        }
-        for col, default_val in required_cols.items():
-            if col not in raw_df.columns:
-                raw_df[col] = default_val
-
-        GLOBAL_PRODUCT_DF = raw_df
-        print(f"✅ [RAM CACHE] Đã nạp thành công {len(raw_df)} sản phẩm. Hệ thống sẵn sàng tính toán!")
-    except Exception as e:
-        print(f"❌ Thất bại khi nạp dữ liệu từ Neon DB: {e}")
-        GLOBAL_PRODUCT_DF = pd.DataFrame()
+    # Toàn bộ logic kết nối + fallback cột + chuẩn hoá cột tìm kiếm giờ nằm
+    # DUY NHẤT trong database.py (dùng chung với mọi nơi khác cần dữ liệu này).
+    GLOBAL_PRODUCT_DF = get_all_products_from_db()
     yield
 
 
@@ -65,10 +34,14 @@ api_service = FastAPI(
 )
 
 # Cấu hình CORS
+# Đây là API đọc dữ liệu công khai (không cookie/session), nên KHÔNG cần
+# allow_credentials=True. Bật kèm allow_origins=["*"] vừa thừa vừa là cấu
+# hình CORS không hợp lệ về mặt spec (trình duyệt sẽ chặn khi credentials
+# được bật cùng wildcard origin) — tắt đi cho đúng với thực tế sử dụng.
 api_service.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -102,15 +75,16 @@ async def search_products(q: str = Query("", description="Từ khóa tìm kiếm
         return {"status": "success", "data": []}
 
     try:
-        df = GLOBAL_PRODUCT_DF.copy()
-        
-        # Tiền xử lý: Ép kiểu string và xử lý NaN để tránh crash thuật toán tìm kiếm
-        df['model_name_clean'] = df['model_name'].fillna('').astype(str).str.lower()
-        df['brand_clean'] = df['brand'].fillna('').astype(str).str.lower()
-        
-        # Tìm kiếm chuỗi con (contains)
-        mask = df['model_name_clean'].str.contains(query) | df['brand_clean'].str.contains(query)
-               
+        # Không copy() + không tính lại model_name_clean/brand_clean ở đây nữa:
+        # 2 cột này đã được chuẩn hoá 1 LẦN DUY NHẤT khi nạp dữ liệu trong
+        # database.py, nên mỗi request search chỉ còn tốn công lọc (mask).
+        df = GLOBAL_PRODUCT_DF
+
+        # regex=False: coi q là chuỗi con thuần tuý, không phải regex — tránh
+        # lỗi/crash khi người dùng gõ ký tự như "(" hoặc "+".
+        mask = df['model_name_clean'].str.contains(query, regex=False, na=False) | \
+               df['brand_clean'].str.contains(query, regex=False, na=False)
+
         search_result = df[mask].head(6) # Trả về tối đa 6 kết quả để UI không bị tràn
         
         # Kiểm tra nếu DB của bạn không có cột 'id' thì lấy index làm ID tạm

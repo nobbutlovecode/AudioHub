@@ -19,43 +19,6 @@ class AudioRecommender:
         else:
             return (x_max - series) / (x_max - x_min)
 
-    def redistribute_weights(self, base_weights, target_key, new_value):
-        """ 
-        Thuật toán tái phân phối trọng số động (Bảo toàn tỷ lệ)
-        Đảm bảo tổng luôn bằng 1.0 và giữ nguyên giá trị new_value của slider mục tiêu
-        """
-        weights = base_weights.copy()
-        if target_key not in weights:
-            return weights
-        
-        # Đảm bảo giá trị mới nằm trong khoảng an toàn [0, 1]
-        new_value = max(0.0, min(1.0, float(new_value)))
-        weights[target_key] = new_value
-        
-        other_keys = [k for k in weights.keys() if k != target_key]
-        if not other_keys:
-            weights[target_key] = 1.0
-            return weights
-            
-        remaining_sum = 1.0 - new_value
-        other_sum = sum(base_weights[k] for k in other_keys)
-        
-        if other_sum > 0:
-            # Phân bổ tỷ lệ thuận theo giá trị cũ của các slider còn lại
-            for k in other_keys:
-                weights[k] = (base_weights[k] / other_sum) * remaining_sum
-        else:
-            # Nếu tất cả các slider còn lại đều bằng 0, thực hiện chia đều phần còn lại
-            for k in other_keys:
-                weights[k] = remaining_sum / len(other_keys)
-                
-        # Khử sai số dấu phẩy động của máy tính để làm tròn tuyệt đối về 1.0
-        total = sum(weights.values())
-        if abs(total - 1.0) > 1e-6:
-            for k in weights.keys():
-                weights[k] = round(weights[k] / total, 4)
-        return weights
-
     def normalize_material(self, text):
         """Phân loại chuỗi ký tự vật lý vật liệu màng loa"""
         if pd.isna(text) or not str(text).strip(): 
@@ -166,8 +129,7 @@ class AudioRecommender:
         df_tws["S_ip"] = df_tws["ip_rating"].apply(self._get_ip_score)
         df_tws["S_sound"] = df_tws["sound_signature"].apply(lambda x: self._calculate_sound_match(x, user_pref))
 
-        # --- ĐỔI MỚI LOGIC CHẤM ĐIỂM ANC ---
-        anc_scores = []
+        # --- LOGIC CHẤM ĐIỂM ANC (đã vector hóa bằng NumPy/Pandas thay vì iterrows) ---
         # Lọc danh sách thiết bị có chống ồn dạng cố định (fixed/standard) để tìm biên độ chia điểm số
         fixed_mask = (~df_tws["anc_type"].astype(str).str.strip().str.lower().isin(["none", "adaptive"])) & (df_tws["anc_depth_db"] > 0)
         fixed_devices = df_tws[fixed_mask]
@@ -175,23 +137,21 @@ class AudioRecommender:
         min_fixed = fixed_devices["anc_depth_db"].min() if not fixed_devices.empty else 0
         max_fixed = fixed_devices["anc_depth_db"].max() if not fixed_devices.empty else 0
 
-        for _, row in df_tws.iterrows():
-            anc_type = str(row.get("anc_type", "None")).strip().lower()
-            anc_depth = float(row.get("anc_depth_db", 0))
-            
-            if anc_type == "none" or anc_depth == 0:
-                anc_scores.append(0.0)
-            elif anc_type == "adaptive":
-                anc_scores.append(0.8)  # Cố định mức 0.8 cho Adaptive ANC theo yêu cầu
-            else:
-                # Dành cho Fixed ANC: Chuẩn hóa đưa về không gian [0.4, 1.0] để luôn vượt trội hơn mức None (0.0)
-                if max_fixed == min_fixed:
-                    anc_scores.append(0.7)
-                else:
-                    score = 0.4 + 0.6 * (anc_depth - min_fixed) / (max_fixed - min_fixed)
-                    anc_scores.append(score)
-                    
-        df_tws["S_anc"] = pd.Series(anc_scores, index=df_tws.index)
+        anc_type_clean = df_tws["anc_type"].astype(str).str.strip().str.lower()
+        anc_depth = pd.to_numeric(df_tws["anc_depth_db"], errors="coerce").fillna(0.0)
+
+        is_none = (anc_type_clean == "none") | (anc_depth == 0)
+        is_adaptive = anc_type_clean == "adaptive"
+
+        if max_fixed == min_fixed:
+            fixed_score = pd.Series(0.7, index=df_tws.index)
+        else:
+            fixed_score = 0.4 + 0.6 * (anc_depth - min_fixed) / (max_fixed - min_fixed)
+
+        df_tws["S_anc"] = pd.Series(
+            np.select([is_none, is_adaptive], [0.0, 0.8], default=fixed_score),
+            index=df_tws.index,
+        )
 
         # Mẫu trọng số mặc định của hệ thống
         default_weights = {

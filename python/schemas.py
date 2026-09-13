@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
 
 class RecommendRequest(BaseModel):
@@ -9,4 +9,6 @@ class RecommendRequest(BaseModel):
                                                       # không bao giờ được gọi tới (đây chính là bug C-List).
     price_min: Optional[float] = None  # FIX: được frontend gửi lên nhưng trước đây không có trong schema
     price_max: Optional[float] = None  # -> Pydantic mặc định bỏ qua field lạ, filter giá coi như vô dụng.
-    limit: int = 5                 # Số lượng sản phẩm tối ưu trả về (mặc định lấy top 5)
+    # Chặn trên 1-50: trước đây không có giới hạn, client gửi limit rất lớn
+    # vẫn được chấp nhận dù không hợp lý.
+    limit: int = Field(default=5, ge=1, le=50)  # Số lượng sản phẩm tối ưu trả về (mặc định lấy top 5)

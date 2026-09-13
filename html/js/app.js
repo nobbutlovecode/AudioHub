@@ -2,20 +2,35 @@
  * AUDIOHUB - CENTRAL LOGIC (ENTERPRISE PATTERN)
  */
 
+// Escape các ký tự HTML đặc biệt trước khi chèn dữ liệu động vào innerHTML.
+// Phòng thủ XSS: model_name, brand... đến từ DB được ghép thẳng vào innerHTML
+// ở nhiều nơi (renderCList, dropdown search). escapeHtml() chặn việc ký tự
+// như "<" bị trình duyệt hiểu thành thẻ HTML thay vì text thuần.
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+}
+
 // --- 1. TỰ ĐỘNG NHÚNG CÁC COMPONENTS (MODALS) ---
 async function loadComponents() {
     const components = ['about.html', 'donate.html', 'clist.html'];
     const injector = document.getElementById('modals-injector');
-    
-    for (let file of components) {
-        try {
-            const res = await fetch(`/html/components/${file}`);
-            const html = await res.text();
-            injector.insertAdjacentHTML('beforeend', html);
-        } catch (error) {
-            console.error(`Lỗi khi load component ${file}:`, error);
-        }
-    }
+
+    // Tải song song 3 file bằng Promise.all thay vì tuần tự — vẫn giữ đúng
+    // thứ tự chèn vào DOM nhờ await theo đúng thứ tự mảng kết quả.
+    const results = await Promise.all(
+        components.map(async (file) => {
+            try {
+                const res = await fetch(`/html/components/${file}`);
+                return await res.text();
+            } catch (error) {
+                console.error(`Lỗi khi load component ${file}:`, error);
+                return '';
+            }
+        })
+    );
+    injector.insertAdjacentHTML('beforeend', results.join(''));
 }
 
 // Khởi chạy khi DOM tải xong
@@ -95,9 +110,9 @@ function renderCList() {
     container.innerHTML = cListMemory.map(item => `
         <div class="bg-[var(--bg-body)] p-3 border border-[var(--b-color)] rounded-lg flex justify-between items-center group transition-colors hover:border-[var(--primary)]">
             <div>
-                <div class="text-[10px] text-[var(--primary)] font-bold uppercase mb-0.5">${item.category}</div>
-                <div class="font-bold text-sm text-[var(--text-main)]">${item.model_name}</div>
-                <div class="text-xs text-[var(--text-sub)]">${item.brand}</div>
+                <div class="text-[10px] text-[var(--primary)] font-bold uppercase mb-0.5">${escapeHtml(item.category)}</div>
+                <div class="font-bold text-sm text-[var(--text-main)]">${escapeHtml(item.model_name)}</div>
+                <div class="text-xs text-[var(--text-sub)]">${escapeHtml(item.brand)}</div>
             </div>
             <button onclick="removeFromCList(${item.id})" class="text-red-500 hover:text-red-400 p-2 opacity-50 hover:opacity-100 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -110,6 +125,7 @@ function renderCList() {
 const searchInput = document.getElementById('searchInput');
 const searchDropdown = document.getElementById('searchDropdown');
 let searchTimeout;
+const vndFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
 if (searchInput) {
     searchInput.addEventListener('input', (e) => {
@@ -124,8 +140,9 @@ if (searchInput) {
         // Debounce 300ms
         searchTimeout = setTimeout(async () => {
             try {
-                // Đảm bảo API này đã có trên Backend FastAPI
-                const res = await fetch(`/api/v1/search?q=${query}`);
+                // encodeURIComponent(query): tránh ký tự như "&", "#", "+" làm
+                // sai lệch query string phía server.
+                const res = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}`);
                 const result = await res.json();
                 
                 if(result.status === "success" && result.data.length > 0) {
@@ -136,8 +153,8 @@ if (searchInput) {
                             <li class="p-4 border-b border-[var(--b-color)] hover:bg-[#1A1A1A] cursor-pointer flex justify-between items-center transition-colors"
                                 onclick="addToCList('${encodedItem}'); document.getElementById('searchInput').value=''; document.getElementById('searchDropdown').classList.add('hidden');">
                                 <div>
-                                    <div class="font-bold text-[var(--text-main)]">${item.model_name}</div>
-                                    <div class="text-xs text-[var(--text-sub)] font-normal mt-0.5">by ${item.brand} • <span style="color:var(--primary)">${new Intl.NumberFormat('vi-VN', {style: 'currency', currency: 'VND'}).format(item.price_vnd)}</span></div>
+                                    <div class="font-bold text-[var(--text-main)]">${escapeHtml(item.model_name)}</div>
+                                    <div class="text-xs text-[var(--text-sub)] font-normal mt-0.5">by ${escapeHtml(item.brand)} • <span style="color:var(--primary)">${vndFormatter.format(item.price_vnd)}</span></div>
                                 </div>
                                 <span class="text-[10px] px-2 py-1 bg-[var(--b-color)] text-[var(--primary)] rounded font-bold transition-transform hover:scale-105">+ ADD C-LIST</span>
                             </li>
@@ -145,7 +162,7 @@ if (searchInput) {
                     }).join('');
                     searchDropdown.classList.remove('hidden');
                 } else {
-                    searchDropdown.innerHTML = `<li class="p-4 text-sm text-[var(--text-sub)] italic">No devices found matching "${query}".</li>`;
+                    searchDropdown.innerHTML = `<li class="p-4 text-sm text-[var(--text-sub)] italic">No devices found matching "${escapeHtml(query)}".</li>`;
                     searchDropdown.classList.remove('hidden');
                 }
             } catch(err) {
@@ -171,6 +188,22 @@ window.runCList = function() {
     // 1. Kiểm tra xem C-List có đang trống không?
     if (cListMemory.length === 0) {
         alert("⚠️ C-List của bạn đang trống! Hãy dùng thanh Tìm kiếm ở ngoài để thêm sản phẩm vào trước nhé.");
+        return;
+    }
+
+    // FIX BUG "NÚT KHÔNG CHẠY": extractAndSearch() (định nghĩa trong index.html)
+    // bắt buộc phải có giá trị ở ô "Favorite Sound Signature" của panel Choose
+    // Category thì mới gọi API. Trước đây nếu người dùng bấm "Run Comparison
+    // Algorithm" trong C-List mà CHƯA từng chọn Sound Signature, hàm sẽ đóng
+    // modal lại rồi ÂM THẦM return sớm bên trong extractAndSearch() — không
+    // alert, không cuộn tới ô lỗi — trông y hệt như nút bị đơ. Chặn sớm ở đây
+    // với thông báo rõ ràng, theo đúng pattern alert() đã có sẵn phía trên.
+    const soundSelect = document.getElementById('sound1');
+    if (soundSelect && !soundSelect.value) {
+        alert("⚠️ Vui lòng chọn 'Favorite Sound Signature' ở panel Choose Category trước khi chạy thuật toán so sánh!");
+        closeModal('modal-clist');
+        soundSelect.focus();
+        soundSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
