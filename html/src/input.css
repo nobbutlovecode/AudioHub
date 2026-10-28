@@ -41,14 +41,13 @@
   }
 
   * { scrollbar-width: thin; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; overflow-x: clip; }
 
   body {
     background-color: var(--bg-body);
     color: var(--text-main);
     font-family: 'Inter', 'Segoe UI', sans-serif;
-    overflow-x: hidden;
-    transition: background-color 0.6s cubic-bezier(.4,0,.2,1), color 0.6s cubic-bezier(.4,0,.2,1);
+    transition: background-color 0.4s cubic-bezier(.4,0,.2,1), color 0.4s cubic-bezier(.4,0,.2,1);
   }
 
   h1, h2, h3, .font-display { font-family: 'Sora', 'Segoe UI', sans-serif; }
@@ -72,9 +71,11 @@
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-  /* Focus rõ ràng cho bàn phím (accessibility) */
-  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
-    outline: 2px solid var(--primary); outline-offset: 2px;
+  /* Hallmark Floor #6: focus-visible — tức thì, rõ ràng cho bàn phím */
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible, .cat-frame:focus-visible {
+    outline: 2px solid var(--primary) !important;
+    outline-offset: 2px !important;
+    transition: none !important;
   }
 }
 
@@ -89,8 +90,9 @@
   /* đúng theo lưới "Black Gold / Clean Light" trong bản thiết kế.                  */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg font-bold text-sm uppercase tracking-wider
-           px-5 py-2.5 transition-all duration-300 ease-smooth select-none
+           px-5 py-2.5 select-none
            disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none;
+    transition: transform 0.2s cubic-bezier(.4, 0, .2, 1), opacity 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
   .btn-primary {
     @apply btn text-bg-body shadow-glow active:scale-[0.97];
@@ -116,11 +118,12 @@
   /* Hiệu ứng "quét sáng" khi hover — dùng cho nút Run chính */
   .btn-shine { position: relative; overflow: hidden; }
   .btn-shine::after {
-    content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+    content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
     background: linear-gradient(115deg, transparent, rgba(255,255,255,0.55), transparent);
-    transform: skewX(-20deg); pointer-events: none;
+    transform: translateX(-150%) skewX(-20deg); pointer-events: none;
+    will-change: transform;
   }
-  .btn-shine:hover::after { animation: run-shine 1.1s ease forwards; }
+  .btn-shine:hover::after { animation: run-shine 0.85s cubic-bezier(.4, 0, .2, 1) forwards; }
   .btn-shine.is-loading { animation: pulse-loading 1.2s ease-in-out infinite; pointer-events: none; }
 
   /* --- 2. TOGGLE SWITCH (dùng chung, thay cho input[name=anc_choice] viết tay) --- */
@@ -157,7 +160,8 @@
 
   /* --- 4. INPUT FIELD DÙNG CHUNG --- */
   .input-field {
-    @apply w-full rounded-lg text-sm font-semibold transition-all duration-300;
+    @apply w-full rounded-lg text-sm font-semibold;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
     background: var(--bg-body); border: 1px solid var(--b-color); color: #fff; padding: 10px 12px;
   }
   .input-field::placeholder { color: var(--text-sub); font-weight: 400; }
@@ -190,8 +194,8 @@
   .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--b-color); border-radius: 10px; }
 
   /* --- 8. Navbar & tiện ích chung --- */
-  .glass-nav { background: var(--surface-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b-color); transition: all 0.5s ease; }
-  .nav-link { color: var(--text-sub); transition: all 0.3s; cursor: pointer; }
+  .glass-nav { background: var(--surface-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b-color); transition: background-color 0.3s ease, border-color 0.3s ease; }
+  .nav-link { color: var(--text-sub); transition: color 0.2s ease, text-shadow 0.2s ease; cursor: pointer; }
   .nav-link:hover { color: var(--primary); text-shadow: 0 0 10px var(--fx-glow); }
 
   .cat-dropdown { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--b-color); border-radius: 12px; padding: 1.5rem; gap: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
@@ -203,11 +207,11 @@
      "Choose Category" (0.667) — nét mảnh bị vỡ nhòe khi co xuống dưới
      ~40px thực hiển thị. Tăng khung + đồng bộ tỉ lệ img bên dưới (w-7 → w-11)
      để icon rõ nét ngang bằng panel, không cần sửa lại file ảnh gốc. */
-  .cat-icon-box { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--b-color); display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; color: var(--text-sub); }
-  .cat-icon-box:hover { border-color: var(--primary); box-shadow: 0 0 20px var(--fx-glow); color: var(--primary); }
+  .cat-icon-box { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--b-color); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, transform 0.2s ease; cursor: pointer; color: var(--text-sub); }
+  .cat-icon-box:hover { border-color: var(--primary); box-shadow: 0 0 20px var(--fx-glow); color: var(--primary); transform: translateY(-2px); }
 
   .text-gradient { background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: background 0.5s ease; }
-  .search-input { transition: all 0.5s ease; }
+  .search-input { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
   .search-input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--fx-glow); outline: none; }
 
   /* NÚT TOGGLE THEME (mặt trời/mặt trăng) */
@@ -215,12 +219,12 @@
     width: 38px; height: 38px; border-radius: 50%; position: relative; cursor: pointer; overflow: hidden;
     background: radial-gradient(circle, #1a1a1a, #0b0b0b);
     border: 1px solid var(--b-color);
-    box-shadow: 0 0 10px var(--fx-glow); transition: transform 0.7s cubic-bezier(.65,0,.35,1), box-shadow 0.4s ease, border-color 0.3s ease;
+    box-shadow: 0 0 10px var(--fx-glow); transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.25s ease, border-color 0.25s ease;
   }
   .toggle-btn:hover { border-color: var(--primary); box-shadow: 0 0 16px var(--fx-glow); }
-  .toggle-btn.rotate { transform: rotate(360deg); }
+  .toggle-btn.rotate { transform: rotate(180deg); }
   .icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .sun, .moon { transition: all 0.7s cubic-bezier(.65,0,.35,1); width: 20px; height: 20px; color: var(--primary); filter: drop-shadow(0 0 5px var(--fx-glow)); }
+  .sun, .moon { transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease; width: 20px; height: 20px; color: var(--primary); filter: drop-shadow(0 0 5px var(--fx-glow)); }
   .sun { transform: translateY(-100%); opacity: 0; }
   .moon { position: absolute; transform: translateY(0); opacity: 1; }
   .theme-gold .sun { transform: translateY(0); opacity: 1; }
@@ -231,7 +235,7 @@
   .intensity-btn {
     width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     border: 1px solid var(--b-color); color: var(--text-sub); cursor: pointer;
-    transition: all 0.3s ease;
+    transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
   .intensity-btn:hover, .intensity-btn.active { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 12px var(--fx-glow); }
   .intensity-pop {
@@ -244,7 +248,8 @@
   .intensity-slider { @apply slider-control; }
 
   /* --- CSS phần Control Panel (giữ nguyên hành vi cũ) --- */
-  .ui-disabled-zone { opacity: 0.2; filter: grayscale(100%); pointer-events: none; }
+  .ui-disabled-zone { opacity: 0.3; filter: grayscale(100%); pointer-events: none; user-select: none; }
+  .ui-disabled-hint { display: block; font-size: 11px; color: var(--text-sub); margin-top: 5px; font-style: italic; }
   .glow-text { text-shadow: 0 0 10px var(--fx-glow); }
 
   input[name="anc_choice"][value="No"]:checked ~ .toggle-pill {
@@ -257,10 +262,10 @@
   html.theme-gold .img-gold { display: block; }
   html.theme-gold .img-cyan { display: none; }
 
-  .cat-img-wrapper { opacity: 0.55; filter: grayscale(100%) brightness(1.5); transition: all 0.3s ease; }
+  .cat-img-wrapper { opacity: 0.55; filter: grayscale(100%) brightness(1.5); transition: opacity 0.25s ease, filter 0.25s ease; }
   input[type="radio"]:checked + .cat-frame .cat-img-wrapper { opacity: 1; filter: grayscale(0%); }
   .cat-frame:hover { transform: translateY(-2px); }
-  .cat-frame { transition: all 0.3s ease, transform 0.25s ease; }
+  .cat-frame { transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease; }
 
   .ctrl-select {
     appearance: none; -webkit-appearance: none; -moz-appearance: none;
@@ -304,7 +309,7 @@
 /* =================================================================== */
 /* KEYFRAMES + REDUCED MOTION — để ngoài layer, luôn được giữ nguyên   */
 /* =================================================================== */
-@keyframes run-shine { from { left: -60%; } to { left: 130%; } }
+@keyframes run-shine { from { transform: translateX(-150%) skewX(-20deg); } to { transform: translateX(350%) skewX(-20deg); } }
 @keyframes pop-in { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes modal-in {
   from { opacity: 0; transform: translateY(14px) scale(0.97); }
@@ -314,12 +319,13 @@
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-#results-body tr { animation: row-in 0.35s cubic-bezier(.2,.8,.2,1) both; }
+#results-body tr:nth-child(-n+5) { animation: row-in 0.35s cubic-bezier(.2,.8,.2,1) both; }
 #results-body tr:nth-child(1) { animation-delay: 0.02s; }
 #results-body tr:nth-child(2) { animation-delay: 0.07s; }
 #results-body tr:nth-child(3) { animation-delay: 0.12s; }
 #results-body tr:nth-child(4) { animation-delay: 0.17s; }
 #results-body tr:nth-child(5) { animation-delay: 0.22s; }
+#results-body tr:nth-child(n+6) { opacity: 1; }
 @keyframes pulse-loading { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
 
 @media (prefers-reduced-motion: reduce) {
