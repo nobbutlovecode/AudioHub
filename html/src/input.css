@@ -19,7 +19,10 @@
     --text-sub: #64748B;
 
     /* Primary Accent: Sophisticated Slate/Charcoal */
-    --primary: #0F172A;
+    --primary-h: 240;
+    --primary-s: 6%;
+    --primary-l: 15%;
+    --primary: hsl(var(--primary-h) var(--primary-s) var(--primary-l));
     --primary-soft: #334155;
     --primary-deep: #020617;
     --primary-grad: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
@@ -68,9 +71,12 @@
     --text-sub: #9E9E9E;
 
     /* Primary Accent: Metallic Gold Gradient */
-    --primary: #C9A94D;
-    --primary-soft: #F5D97A;
-    --primary-deep: #B89635;
+    --primary-h: 45;
+    --primary-s: 65%;
+    --primary-l: 52%;
+    --primary: hsl(var(--primary-h) var(--primary-s) var(--primary-l));
+    --primary-soft: hsl(var(--primary-h) var(--primary-s) calc(var(--primary-l) + 18%));
+    --primary-deep: hsl(var(--primary-h) var(--primary-s) calc(var(--primary-l) - 16%));
     --primary-grad: linear-gradient(135deg, #B89635 0%, #F5D97A 50%, #C9A94D 100%);
     --fx-glow: rgba(201, 169, 77, 0.25);
 
@@ -156,11 +162,9 @@
 @layer components {
 
   /* --- 1. CATEGORY ICONS SWITCH (LIGHT vs GOLD) --- */
-  /* Ở theme Clean Light: hiện icon nền light biểu tượng đen */
   .img-cat-light { display: block; }
   .img-cat-gold { display: none; }
 
-  /* Ở theme Black Gold: hiện icon nền tối viền vàng gold */
   html.theme-gold .img-cat-light { display: none; }
   html.theme-gold .img-cat-gold { display: block; }
 
@@ -304,7 +308,28 @@
   }
   .slider-control::-webkit-slider-thumb:hover { transform: scale(1.18); }
 
-  /* --- 5. NAVBAR & UTILITIES --- */
+  /* --- 5. NÚT + POPOVER CHỈNH ĐỘ SÁNG / ĐẬM NHẠT MÀU (INTENSITY) --- */
+  .intensity-wrap { position: relative; }
+  .intensity-btn {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--b-color); color: var(--text-sub); cursor: pointer;
+    background: var(--surface);
+    transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .intensity-btn:hover, .intensity-btn.active {
+    border-color: var(--primary); color: var(--primary); box-shadow: 0 0 12px var(--fx-glow);
+  }
+  .intensity-pop {
+    display: none; position: absolute; top: calc(100% + 10px); right: 0; width: 230px;
+    background: var(--surface); border: 1px solid var(--b-color); border-radius: 14px;
+    padding: 1.1rem 1.2rem; box-shadow: var(--shadow-modal);
+    animation: pop-in 0.2s cubic-bezier(.2,.8,.2,1);
+    z-index: 60;
+  }
+  .intensity-pop.show { display: block; }
+  .intensity-slider { @apply slider-control; }
+
+  /* --- 6. NAVBAR & UTILITIES --- */
   .glass-nav {
     background: var(--surface-glass);
     backdrop-filter: blur(16px);
@@ -328,6 +353,7 @@
   .animate-modal-in { animation: modal-in 0.25s cubic-bezier(.16, 1, 0.3, 1); }
 }
 
+@keyframes pop-in { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes run-shine { from { transform: translateX(-150%) skewX(-20deg); } to { transform: translateX(350%) skewX(-20deg); } }
 @keyframes modal-in {
   from { opacity: 0; transform: translateY(12px) scale(0.98); }

@@ -21,8 +21,8 @@
             </span>
         </div>
         
-        <!-- Giữa: Menu & Chuyển Đổi Theme -->
-        <div class="flex items-center space-x-4 md:space-x-8">
+        <!-- Giữa: Menu, Chuyển Đổi Theme & Nút Điều Chỉnh Độ Sáng / Mờ (Intensity) -->
+        <div class="flex items-center space-x-3 md:space-x-6">
             <div class="relative nav-item-cat py-2 group">
                 <span class="font-bold text-xs uppercase tracking-wider text-[var(--text-sub)] hover:text-[var(--primary)] transition-colors cursor-pointer">Categories ▾</span>
                 <!-- Dropdown danh mục với icon HD chuẩn -->
@@ -58,6 +58,21 @@
             <button onclick="switchThemeEffect(this)" class="w-9 h-9 rounded-full border border-[var(--b-color)] bg-[var(--surface)] flex items-center justify-center text-sm shadow-sm transition-transform active:scale-90" title="Chuyển theme Clean Light / Black Gold" aria-label="Toggle Theme">
                 <span id="theme-btn-icon">🌙</span>
             </button>
+
+            <!-- NÚT + POPOVER CHỈNH ĐỘ SÁNG / ĐẬM NHẠT MÀU (INTENSITY - KHÔI PHỤC TỪ REPO GỐC) -->
+            <div class="intensity-wrap">
+                <button class="intensity-btn" id="intensity-btn" onclick="toggleIntensityPop()" title="Chỉnh độ sáng màu chủ đạo" aria-label="Adjust Intensity">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.36 6.36l-.7-.7M6.34 6.34l-.7-.7m12.72 0l-.7.7M6.34 17.66l-.7.7M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+                </button>
+                <div class="intensity-pop" id="intensity-pop">
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[var(--primary)] mb-3">Độ sáng màu chủ đạo</label>
+                    <input type="range" min="30" max="75" step="1" id="intensity-slider" class="intensity-slider" oninput="updateIntensity(this.value)">
+                    <div class="flex justify-between text-[9px] text-[var(--text-sub)] font-bold uppercase mt-2">
+                        <span>Đậm / Tối</span>
+                        <span>Sáng / Nhạt</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Phải: Nút C-List -->
@@ -273,12 +288,60 @@
 
     <!-- SCRIPT CLIENT -->
     <script>
+        const DEFAULT_L = { light: 15, gold: 52 };
+
+        function currentThemeKey() {
+            return document.documentElement.classList.contains('theme-gold') ? 'gold' : 'light';
+        }
+
+        function applyIntensity(value) {
+            document.documentElement.style.setProperty('--primary-l', value + '%');
+            const isGold = document.documentElement.classList.contains('theme-gold');
+            if (isGold) {
+                document.documentElement.style.setProperty('--primary', `hsl(45 65% ${value}%)`);
+                document.documentElement.style.setProperty('--primary-soft', `hsl(45 65% ${Math.min(100, Number(value) + 18)}%)`);
+                document.documentElement.style.setProperty('--primary-deep', `hsl(45 65% ${Math.max(0, Number(value) - 16)}%)`);
+            } else {
+                document.documentElement.style.setProperty('--primary', `hsl(240 6% ${value}%)`);
+            }
+            const slider = document.getElementById('intensity-slider');
+            if (slider) slider.value = value;
+        }
+
+        function updateIntensity(value) {
+            applyIntensity(value);
+            localStorage.setItem(`audiohub-intensity-${currentThemeKey()}`, value);
+        }
+
+        function loadIntensityForCurrentTheme() {
+            const key = currentThemeKey();
+            const saved = localStorage.getItem(`audiohub-intensity-${key}`);
+            applyIntensity(saved || DEFAULT_L[key]);
+        }
+
+        function toggleIntensityPop() {
+            const pop = document.getElementById('intensity-pop');
+            const btn = document.getElementById('intensity-btn');
+            pop.classList.toggle('show');
+            btn.classList.toggle('active');
+        }
+
+        // Đóng popover khi click ra ngoài
+        document.addEventListener('click', (e) => {
+            const wrap = document.querySelector('.intensity-wrap');
+            if (wrap && !wrap.contains(e.target)) {
+                document.getElementById('intensity-pop')?.classList.remove('show');
+                document.getElementById('intensity-btn')?.classList.remove('active');
+            }
+        });
+
         function switchThemeEffect(btn) {
             btn.classList.add("rotate-180");
             setTimeout(() => btn.classList.remove("rotate-180"), 300);
             const isGold = document.documentElement.classList.toggle("theme-gold");
             localStorage.setItem('audiohub-theme', isGold ? 'gold' : 'light');
             document.getElementById('theme-btn-icon').innerText = isGold ? '🌙' : '☀️';
+            loadIntensityForCurrentTheme();
         }
 
         function updateAncToggle() {}
@@ -413,6 +476,7 @@
                 document.documentElement.classList.add('theme-gold');
                 document.getElementById('theme-btn-icon').innerText = '🌙';
             }
+            loadIntensityForCurrentTheme();
             updateUIState();
         });
     </script>
