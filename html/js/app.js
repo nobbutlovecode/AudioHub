@@ -1,24 +1,19 @@
 /**
- * AUDIOHUB - CENTRAL LOGIC (ENTERPRISE PATTERN)
+ * AUDIOHUB — CENTRAL LOGIC (v2.5 — Clean Light & Black Gold)
  */
 
-// Escape các ký tự HTML đặc biệt trước khi chèn dữ liệu động vào innerHTML.
-// Phòng thủ XSS: model_name, brand... đến từ DB được ghép thẳng vào innerHTML
-// ở nhiều nơi (renderCList, dropdown search). escapeHtml() chặn việc ký tự
-// như "<" bị trình duyệt hiểu thành thẻ HTML thay vì text thuần.
 function escapeHtml(value) {
     const div = document.createElement('div');
     div.textContent = value ?? '';
     return div.innerHTML;
 }
 
-// --- 1. TỰ ĐỘNG NHÚNG CÁC COMPONENTS (MODALS) ---
+// 1. TỰ ĐỘNG NHÚNG CÁC MODALS
 async function loadComponents() {
     const components = ['about.html', 'donate.html', 'clist.html'];
     const injector = document.getElementById('modals-injector');
+    if (!injector) return;
 
-    // Tải song song 3 file bằng Promise.all thay vì tuần tự — vẫn giữ đúng
-    // thứ tự chèn vào DOM nhờ await theo đúng thứ tự mảng kết quả.
     const results = await Promise.all(
         components.map(async (file) => {
             try {
@@ -33,10 +28,9 @@ async function loadComponents() {
     injector.insertAdjacentHTML('beforeend', results.join(''));
 }
 
-// Khởi chạy khi DOM tải xong
 document.addEventListener('DOMContentLoaded', loadComponents);
 
-// --- 2. HỆ THỐNG MODAL (Mở / Đóng) ---
+// 2. HỆ THỐNG MODAL (Mở / Đóng)
 function openModal(id) {
     const modal = document.getElementById(id);
     if(modal) {
@@ -45,10 +39,10 @@ function openModal(id) {
         const content = modal.querySelector('.modal-content');
         if (content) {
             content.classList.remove('animate-modal-in');
-            void content.offsetWidth; // force reflow để animation chạy lại mỗi lần mở
+            void content.offsetWidth;
             content.classList.add('animate-modal-in');
         }
-        if(id === 'modal-clist') renderCList(); // Cập nhật list trước khi mở
+        if(id === 'modal-clist') renderCList();
     }
 }
 
@@ -60,40 +54,64 @@ function closeModal(id) {
     }
 }
 
-// Đóng khi click ngoài viền
 window.onclick = function(event) {
     if (event.target.classList.contains('modal-overlay')) {
         closeModal(event.target.id);
     }
+};
+
+// 3. C-LIST PERSISTENCE VỚI LOCALSTORAGE
+let cListMemory = [];
+
+function loadCListFromStorage() {
+    try {
+        const saved = localStorage.getItem('audiohub-clist');
+        if (saved) {
+            cListMemory = JSON.parse(saved);
+        }
+    } catch (e) {
+        console.warn('Lỗi đọc C-List từ localStorage:', e);
+        cListMemory = [];
+    }
 }
 
-// --- 3. HỆ THỐNG IN-MEMORY C-LIST (VERSUS STYLE) ---
-// (Theme Cyan/Gold + độ sáng màu được quản lý tập trung trong index.html)
-// Biến này lưu trên RAM trình duyệt. Reset web = mất trắng.
-let cListMemory = []; 
+function saveCListToStorage() {
+    try {
+        localStorage.setItem('audiohub-clist', JSON.stringify(cListMemory));
+    } catch (e) {
+        console.warn('Lỗi lưu C-List vào localStorage:', e);
+    }
+}
+
+loadCListFromStorage();
 
 function updateCListCount() {
     const badge = document.getElementById('clist-count');
+    if (!badge) return;
     badge.innerText = cListMemory.length;
-    
-    // Hiệu ứng "Pulse" khi thêm đồ
-    badge.classList.add('scale-150');
-    setTimeout(() => badge.classList.remove('scale-150'), 200);
+    badge.classList.add('scale-125');
+    setTimeout(() => badge.classList.remove('scale-125'), 200);
 }
 
 function addToCList(itemJsonBase64) {
-    // Giải mã data an toàn
     const item = JSON.parse(decodeURIComponent(escape(atob(itemJsonBase64))));
-    
-    // Check trùng lặp
     if (!cListMemory.find(i => i.id === item.id)) {
         cListMemory.push(item);
+        saveCListToStorage();
         updateCListCount();
     }
 }
 
 function removeFromCList(id) {
     cListMemory = cListMemory.filter(i => i.id !== id);
+    saveCListToStorage();
+    updateCListCount();
+    renderCList();
+}
+
+function clearCList() {
+    cListMemory = [];
+    saveCListToStorage();
     updateCListCount();
     renderCList();
 }
@@ -103,25 +121,25 @@ function renderCList() {
     if(!container) return;
 
     if (cListMemory.length === 0) {
-        container.innerHTML = `<div class="text-center text-[var(--text-sub)] mt-12 italic">Your list is empty. Search above to add devices.</div>`;
+        container.innerHTML = `<div class="text-center text-[var(--text-sub)] py-12 text-xs italic">C-List đang trống. Hãy tìm kiếm ở ngoài để thêm thiết bị so sánh.</div>`;
         return;
     }
 
     container.innerHTML = cListMemory.map(item => `
-        <div class="bg-[var(--bg-body)] p-3 border border-[var(--b-color)] rounded-lg flex justify-between items-center group transition-colors hover:border-[var(--primary)]">
+        <div class="bg-[var(--surface-alt)] p-3.5 border border-[var(--b-color)] rounded-xl flex justify-between items-center group transition-colors hover:border-[var(--primary)]">
             <div>
-                <div class="text-[10px] text-[var(--primary)] font-bold uppercase mb-0.5">${escapeHtml(item.category)}</div>
-                <div class="font-bold text-sm text-[var(--text-main)]">${escapeHtml(item.model_name)}</div>
-                <div class="text-xs text-[var(--text-sub)]">${escapeHtml(item.brand)}</div>
+                <div class="text-[10px] text-[var(--primary)] font-bold uppercase tracking-wider mb-0.5">${escapeHtml(item.category || '')}</div>
+                <div class="font-bold text-sm text-[var(--text-heading)]">${escapeHtml(item.model_name)}</div>
+                <div class="text-xs text-[var(--text-sub)]">${escapeHtml(item.brand || '')}</div>
             </div>
-            <button onclick="removeFromCList(${item.id})" class="text-red-500 hover:text-red-400 p-2 opacity-50 hover:opacity-100 transition-opacity duration-200">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            <button onclick="removeFromCList(${item.id})" class="text-red-500 hover:text-red-400 p-2 opacity-60 hover:opacity-100 transition-opacity" title="Xóa khỏi danh sách">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
         </div>
     `).join('');
 }
 
-// --- 5. TÌM KIẾM (AUTOCOMPLETE API) ---
+// 4. TÌM KIẾM SẢN PHẨM AUTOCOMPLETE (DEBOUNCE 250ms)
 const searchInput = document.getElementById('searchInput');
 const searchDropdown = document.getElementById('searchDropdown');
 let searchTimeout;
@@ -137,41 +155,36 @@ if (searchInput) {
             return;
         }
 
-        // Debounce 300ms
         searchTimeout = setTimeout(async () => {
             try {
-                // encodeURIComponent(query): tránh ký tự như "&", "#", "+" làm
-                // sai lệch query string phía server.
                 const res = await fetch(`/api/v1/search?q=${encodeURIComponent(query)}`);
                 const result = await res.json();
                 
                 if(result.status === "success" && result.data.length > 0) {
                     searchDropdown.innerHTML = result.data.map(item => {
-                        // Mã hóa an toàn tránh lỗi dấu ngoặc kép HTML
                         const encodedItem = btoa(unescape(encodeURIComponent(JSON.stringify(item))));
                         return `
-                            <li class="p-4 border-b border-[var(--b-color)] hover:bg-[#1A1A1A] cursor-pointer flex justify-between items-center transition-colors"
+                            <li class="p-3.5 border-b border-[var(--b-color)] hover:bg-[var(--surface-alt)] cursor-pointer flex justify-between items-center transition-colors text-xs"
                                 onclick="addToCList('${encodedItem}'); document.getElementById('searchInput').value=''; document.getElementById('searchDropdown').classList.add('hidden');">
                                 <div>
-                                    <div class="font-bold text-[var(--text-main)]">${escapeHtml(item.model_name)}</div>
-                                    <div class="text-xs text-[var(--text-sub)] font-normal mt-0.5">by ${escapeHtml(item.brand)} • <span style="color:var(--primary)">${vndFormatter.format(item.price_vnd)}</span></div>
+                                    <div class="font-bold text-[var(--text-heading)]">${escapeHtml(item.model_name)}</div>
+                                    <div class="text-[11px] text-[var(--text-sub)] mt-0.5">${escapeHtml(item.brand)} · <span class="text-[var(--primary)] font-bold">${vndFormatter.format(item.price_vnd)}</span></div>
                                 </div>
-                                <span class="text-[10px] px-2 py-1 bg-[var(--b-color)] text-[var(--primary)] rounded font-bold transition-transform hover:scale-105">+ ADD C-LIST</span>
+                                <span class="text-[10px] px-2.5 py-1 bg-[var(--surface-alt)] text-[var(--primary)] rounded-full font-bold">+ Thêm</span>
                             </li>
                         `;
                     }).join('');
                     searchDropdown.classList.remove('hidden');
                 } else {
-                    searchDropdown.innerHTML = `<li class="p-4 text-sm text-[var(--text-sub)] italic">No devices found matching "${escapeHtml(query)}".</li>`;
+                    searchDropdown.innerHTML = `<li class="p-4 text-xs text-[var(--text-sub)] italic">Không tìm thấy thiết bị nào khớp với "${escapeHtml(query)}".</li>`;
                     searchDropdown.classList.remove('hidden');
                 }
             } catch(err) {
                 console.error("Lỗi gọi API tìm kiếm:", err);
             }
-        }, 300);
+        }, 250);
     });
 
-    // Ẩn search khi click ra ngoài
     document.addEventListener('click', (e) => {
         if(!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
             searchDropdown.classList.add('hidden');
@@ -179,48 +192,34 @@ if (searchInput) {
     });
 }
 
-// =================================================================
-// TÍNH NĂNG C-LIST: RUN COMPARISON ALGORITHM
-// Sử dụng window. để đảm bảo hàm là Global (Toàn cục), độc lập với
-// việc #searchInput có tồn tại hay không.
-// =================================================================
+// 5. C-LIST RUN COMPARISON
 window.runCList = function() {
-    // 1. Kiểm tra xem C-List có đang trống không?
     if (cListMemory.length === 0) {
-        alert("⚠️ C-List của bạn đang trống! Hãy dùng thanh Tìm kiếm ở ngoài để thêm sản phẩm vào trước nhé.");
+        alert("⚠️ Danh sách C-List của bạn đang trống! Hãy tìm kiếm và thêm sản phẩm trước.");
         return;
     }
 
-    // FIX BUG "NÚT KHÔNG CHẠY": extractAndSearch() (định nghĩa trong index.html)
-    // bắt buộc phải có giá trị ở ô "Favorite Sound Signature" của panel Choose
-    // Category thì mới gọi API. Trước đây nếu người dùng bấm "Run Comparison
-    // Algorithm" trong C-List mà CHƯA từng chọn Sound Signature, hàm sẽ đóng
-    // modal lại rồi ÂM THẦM return sớm bên trong extractAndSearch() — không
-    // alert, không cuộn tới ô lỗi — trông y hệt như nút bị đơ. Chặn sớm ở đây
-    // với thông báo rõ ràng, theo đúng pattern alert() đã có sẵn phía trên.
     const soundSelect = document.getElementById('sound1');
     if (soundSelect && !soundSelect.value) {
-        alert("⚠️ Vui lòng chọn 'Favorite Sound Signature' ở panel Choose Category trước khi chạy thuật toán so sánh!");
+        alert("⚠️ Vui lòng chọn ít nhất 1 gu âm học (Favorite Sound Signature) ở bảng điều khiển trước!");
         closeModal('modal-clist');
         soundSelect.focus();
         soundSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
-    // 2. Đóng Modal C-List lại
     closeModal('modal-clist');
 
-    // 3. Gọi lại hàm extractAndSearch (đã định nghĩa trong index.html) để chạy MCDM Engine
     if (typeof extractAndSearch === "function") {
         extractAndSearch();
-    } else {
-        console.error("Không tìm thấy hàm extractAndSearch()");
-        return;
     }
 
-    // 4. Cuộn màn hình mượt mà xuống khu vực Bảng Kết quả
     const resultsContainer = document.getElementById('results-container');
     if (resultsContainer) {
         resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateCListCount();
+});

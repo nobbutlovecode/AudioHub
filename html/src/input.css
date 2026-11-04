@@ -2,332 +2,342 @@
 @tailwind components;
 @tailwind utilities;
 
-/* =================================================================== */
-/* BASE — biến CSS + reset toàn cục                                    */
-/* Trước đây nằm rải rác trong thẻ <style> của index.html, giờ tập     */
-/* trung ở đây, biên dịch cùng Tailwind thành 1 file dist/output.css   */
-/* =================================================================== */
-@layer base {
-  :root {
-    --bg-body: #050505;
-    --surface: #0A0A0A;
-    --surface-glass: rgba(10, 10, 10, 0.82);
-    --text-main: #FFFFFF;
-    --text-sub: #A3A3A3;
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* Hallmark stamp — AudioHub Modern Redesign                             */
+/* Clean Light & Black Gold Ergonomic Design System                      */
+/* ═══════════════════════════════════════════════════════════════════════ */
 
-    /* Cyan — hue/saturation cố định theo thương hiệu, độ sáng chỉnh được bằng slider */
-    --primary-h: 189;
-    --primary-s: 100%;
-    --primary-l: 50%;
-    --primary: hsl(var(--primary-h) var(--primary-s) var(--primary-l));
-    --primary-soft: hsl(var(--primary-h) var(--primary-s) calc(var(--primary-l) + 18%));
-    --primary-deep: hsl(var(--primary-h) var(--primary-s) calc(var(--primary-l) - 16%));
-    --primary-grad: linear-gradient(135deg, var(--primary-deep) 0%, var(--primary-soft) 40%, var(--primary) 60%, var(--primary-deep) 100%);
-    --fx-glow: hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.4);
-    --b-color: #1F2A33;
+@layer base {
+  /* ─── 1. CLEAN LIGHT (DEFAULT LIGHT THEME) ─── */
+  :root {
+    --bg-body: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-alt: #F1F5F9;
+    --surface-glass: rgba(255, 255, 255, 0.92);
+    --text-heading: #0F172A;
+    --text-main: #1E293B;
+    --text-sub: #64748B;
+
+    /* Primary Accent: Sophisticated Slate/Charcoal */
+    --primary: #0F172A;
+    --primary-soft: #334155;
+    --primary-deep: #020617;
+    --primary-grad: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+    --fx-glow: rgba(15, 23, 42, 0.06);
+
+    /* Border & Radii (Border Spec I: Clean White) */
+    --b-color: #E2E8F0;
+    --b-color-hover: #CBD5E1;
+    --b-radius: 12px;
+    --b-width: 1px;
+
+    /* Shadows: Subtle & Flat */
+    --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    --shadow-modal: 0 20px 50px -10px rgba(15, 23, 42, 0.15);
+
+    /* Inputs */
+    --input-bg: #F8FAFC;
+    --input-border: #E2E8F0;
+    --input-text: #0F172A;
+    --input-placeholder: #94A3B8;
+
+    /* Button Colors */
+    --btn-primary-bg: #0F172A;
+    --btn-primary-text: #FFFFFF;
+
+    /* Category Disc */
+    --disc-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: #CBD5E1;
+
+    --success: #10B981;
+    --success-bg: #ECFDF5;
+    --error: #EF4444;
+    --error-bg: #FEF2F2;
   }
 
+  /* ─── 2. BLACK GOLD (PREMIUM DARK THEME) ─── */
   html.theme-gold {
     --bg-body: #0A0A0A;
     --surface: #121212;
-    --surface-glass: rgba(18, 18, 18, 0.82);
+    --surface-alt: #181818;
+    --surface-glass: rgba(18, 18, 18, 0.88);
+    --text-heading: #FFFFFF;
+    --text-main: #F1F5F9;
+    --text-sub: #9E9E9E;
 
-    /* Gold — hue/saturation cố định, độ sáng chỉnh được bằng slider (riêng biệt với Cyan) */
-    --primary-h: 45;
-    --primary-s: 65%;
-    --primary-l: 52%;
-    --fx-glow: hsl(var(--primary-h) var(--primary-s) var(--primary-l) / 0.4);
-    --b-color: #332D1F;
+    /* Primary Accent: Metallic Gold Gradient */
+    --primary: #C9A94D;
+    --primary-soft: #F5D97A;
+    --primary-deep: #B89635;
+    --primary-grad: linear-gradient(135deg, #B89635 0%, #F5D97A 50%, #C9A94D 100%);
+    --fx-glow: rgba(201, 169, 77, 0.25);
+
+    /* Border & Radii (Border Spec III: Black Gold) */
+    --b-color: #262626;
+    --b-color-hover: #3D3520;
+    --b-radius: 14px;
+    --b-width: 1.5px;
+
+    /* Shadows: Deep & Rich */
+    --shadow-card: 0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 25px rgba(201, 169, 77, 0.1);
+    --shadow-modal: 0 25px 60px -10px rgba(0, 0, 0, 0.9), 0 0 35px rgba(201, 169, 77, 0.15);
+
+    /* Inputs */
+    --input-bg: #141414;
+    --input-border: #262626;
+    --input-text: #FFFFFF;
+    --input-placeholder: #6B7280;
+
+    /* Button Colors */
+    --btn-primary-bg: var(--primary-grad);
+    --btn-primary-text: #0A0A0A;
+
+    /* Category Disc */
+    --disc-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.9), 0 0 20px rgba(201, 169, 77, 0.25);
+
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: #333333;
+
+    --success: #34D399;
+    --success-bg: rgba(52, 211, 153, 0.12);
+    --error: #F87171;
+    --error-bg: rgba(248, 113, 113, 0.12);
   }
 
-  * { scrollbar-width: thin; }
+  * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); box-sizing: border-box; }
   html { scroll-behavior: smooth; overflow-x: clip; }
 
   body {
     background-color: var(--bg-body);
     color: var(--text-main);
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    transition: background-color 0.4s cubic-bezier(.4,0,.2,1), color 0.4s cubic-bezier(.4,0,.2,1);
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    overflow-x: clip;
+    transition: background-color 0.35s cubic-bezier(.4,0,.2,1), color 0.35s cubic-bezier(.4,0,.2,1);
+    -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, .font-display { font-family: 'Sora', 'Segoe UI', sans-serif; }
+  h1, h2, h3, .font-display {
+    font-family: 'Sora', 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-heading);
+  }
 
-  /* Vùng sáng mờ ambient phía sau nội dung, tạo chiều sâu */
+  /* Ambient Glow Background for Black Gold */
   body::before {
     content: '';
     position: fixed;
     top: -20%; left: 50%;
-    width: 900px; height: 900px;
+    width: 950px; height: 800px;
     transform: translateX(-50%);
-    background: radial-gradient(circle, var(--fx-glow) 0%, transparent 65%);
-    opacity: 0.35;
+    background: radial-gradient(circle at 50% 30%, var(--fx-glow) 0%, transparent 65%);
+    opacity: 0;
     pointer-events: none;
     z-index: 0;
-    transition: background 0.6s ease;
+    transition: opacity 0.5s ease;
   }
+  html.theme-gold body::before { opacity: 1; }
+
   nav, main, #modals-injector { position: relative; z-index: 1; }
 
-  /* Ẩn mũi tên của thẻ input number */
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-  /* Hallmark Floor #6: focus-visible — tức thì, rõ ràng cho bàn phím */
-  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible, .cat-frame:focus-visible {
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
     outline: 2px solid var(--primary) !important;
     outline-offset: 2px !important;
     transition: none !important;
   }
 }
 
-/* =================================================================== */
-/* COMPONENTS — khối UI dùng lại được nhiều nơi (đây là phần Tailwind   */
-/* Play CDN không hỗ trợ tốt: token + component 1 nguồn, dùng khắp nơi)*/
-/* =================================================================== */
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* COMPONENTS                                                            */
+/* ═══════════════════════════════════════════════════════════════════════ */
 @layer components {
 
-  /* --- 1. HỆ THỐNG BUTTON: Primary / Secondary / Ghost / Icon --- */
-  /* Mỗi biến thể có đủ 4 trạng thái: Default, Hover, Pressed (:active), Disabled — */
-  /* đúng theo lưới "Black Gold / Clean Light" trong bản thiết kế.                  */
+  /* --- 1. CATEGORY ICONS SWITCH (LIGHT vs GOLD) --- */
+  /* Ở theme Clean Light: hiện icon nền light biểu tượng đen */
+  .img-cat-light { display: block; }
+  .img-cat-gold { display: none; }
+
+  /* Ở theme Black Gold: hiện icon nền tối viền vàng gold */
+  html.theme-gold .img-cat-light { display: none; }
+  html.theme-gold .img-cat-gold { display: block; }
+
+  .category-disc {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--disc-shadow);
+    transition: transform 0.25s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.25s ease;
+  }
+  .category-disc:hover {
+    transform: translateY(-4px) scale(1.05);
+  }
+  input[type="radio"]:checked + .category-disc {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 16px 35px -4px rgba(201, 169, 77, 0.4), var(--disc-shadow);
+  }
+  html:not(.theme-gold) input[type="radio"]:checked + .category-disc {
+    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.2), var(--disc-shadow);
+  }
+
+  /* --- 2. BUTTONS --- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg font-bold text-sm uppercase tracking-wider
-           px-5 py-2.5 select-none
-           disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none;
-    transition: transform 0.2s cubic-bezier(.4, 0, .2, 1), opacity 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    @apply inline-flex items-center justify-center gap-2 font-bold text-sm tracking-wide select-none;
+    border-radius: var(--b-radius);
+    padding: 10px 22px;
+    transition: transform 0.2s cubic-bezier(.4, 0, .2, 1), box-shadow 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
   }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
   .btn-primary {
-    @apply btn text-bg-body shadow-glow active:scale-[0.97];
-    background: var(--primary-grad);
+    @apply btn;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
   }
-  .btn-primary:hover { filter: brightness(1.1); box-shadow: 0 0 25px var(--fx-glow); }
+  .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); }
+  html.theme-gold .btn-primary {
+    box-shadow: 0 4px 18px rgba(201, 169, 77, 0.35);
+  }
+  html.theme-gold .btn-primary:hover {
+    box-shadow: 0 6px 26px rgba(201, 169, 77, 0.55);
+  }
 
   .btn-secondary {
-    @apply btn bg-transparent border border-b-color text-white active:scale-[0.97];
+    @apply btn;
+    background: var(--surface);
+    border: 1px solid var(--b-color);
+    color: var(--text-main);
   }
-  .btn-secondary:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 12px var(--fx-glow); }
-
-  .btn-ghost {
-    @apply btn bg-transparent text-text-sub active:scale-[0.97];
-  }
-  .btn-ghost:hover { color: var(--primary); background: rgba(255,255,255,0.05); }
+  .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
 
   .btn-icon {
-    @apply btn !p-0 w-10 h-10 rounded-full bg-transparent border border-b-color text-text-sub active:scale-90;
+    @apply btn !p-0;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--b-color);
+    color: var(--text-sub);
   }
-  .btn-icon:hover { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 12px var(--fx-glow); }
+  .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
 
-  /* Hiệu ứng "quét sáng" khi hover — dùng cho nút Run chính */
+  /* Sweep-shine effect cho Run Button */
   .btn-shine { position: relative; overflow: hidden; }
   .btn-shine::after {
     content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
-    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.55), transparent);
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.4), transparent);
     transform: translateX(-150%) skewX(-20deg); pointer-events: none;
-    will-change: transform;
   }
   .btn-shine:hover::after { animation: run-shine 0.85s cubic-bezier(.4, 0, .2, 1) forwards; }
-  .btn-shine.is-loading { animation: pulse-loading 1.2s ease-in-out infinite; pointer-events: none; }
+  .btn-shine.is-loading { opacity: 0.8; pointer-events: none; }
 
-  /* --- 2. TOGGLE SWITCH (dùng chung, thay cho input[name=anc_choice] viết tay) --- */
-  .toggle-switch {
-    @apply relative inline-flex items-center rounded-full cursor-pointer transition-colors duration-300;
-    width: 44px; height: 24px; background: var(--b-color);
-  }
-  .toggle-switch input { @apply absolute inset-0 opacity-0 cursor-pointer w-full h-full; margin: 0; }
-  .toggle-switch .knob {
-    @apply absolute rounded-full bg-white transition-transform duration-300 ease-smooth;
-    width: 18px; height: 18px; top: 3px; left: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  }
-  .toggle-switch input:checked ~ .knob { transform: translateX(20px); }
-  .toggle-switch input:checked ~ .track-bg { background: var(--primary); box-shadow: 0 0 10px var(--fx-glow); }
-  .toggle-switch input:disabled ~ .knob { opacity: 0.4; }
-
-  /* --- 3. SLIDER DÙNG CHUNG (độ sáng màu + mọi range input khác) --- */
-  .slider-control {
-    -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 4px;
-    background: linear-gradient(90deg, var(--primary-deep), var(--primary), var(--primary-soft));
-    outline: none; cursor: pointer;
-  }
-  .slider-control::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
-    background: #fff; border: 2px solid var(--primary); box-shadow: 0 0 8px var(--fx-glow);
-    cursor: pointer; transition: transform 0.15s ease;
-  }
-  .slider-control::-webkit-slider-thumb:hover { transform: scale(1.15); }
-  .slider-control::-moz-range-thumb {
-    width: 16px; height: 16px; border-radius: 50%; background: #fff;
-    border: 2px solid var(--primary); box-shadow: 0 0 8px var(--fx-glow); cursor: pointer;
-  }
-  .slider-control:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* --- 4. INPUT FIELD DÙNG CHUNG --- */
+  /* --- 3. INPUT FIELDS & SELECTS --- */
   .input-field {
-    @apply w-full rounded-lg text-sm font-semibold;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-    background: var(--bg-body); border: 1px solid var(--b-color); color: #fff; padding: 10px 12px;
+    width: 100%;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  .input-field::placeholder { color: var(--text-sub); font-weight: 400; }
-  .input-field:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--fx-glow); outline: none; }
-  .input-field:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* --- 5. CHIP / TAG (gợi ý dùng cho C-List, bộ lọc...) --- */
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full text-xs font-semibold px-3 py-1 border transition-colors duration-200;
-    background: var(--surface); border-color: var(--b-color); color: var(--text-sub);
+  .input-field:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--fx-glow);
   }
-  .chip:hover { border-color: var(--primary); color: var(--primary); }
-  .chip .chip-remove { @apply cursor-pointer opacity-70 hover:opacity-100; }
-
-  /* --- 6. STEPPER (bộ đếm +/-, gợi ý cho limit/servings...) --- */
-  .stepper {
-    @apply inline-flex items-center rounded-lg border overflow-hidden;
-    border-color: var(--b-color);
-  }
-  .stepper button {
-    @apply w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors duration-200;
-    color: var(--text-sub); background: var(--surface);
-  }
-  .stepper button:hover { color: var(--primary); }
-  .stepper span { @apply w-10 text-center text-sm font-bold; }
-
-  /* --- 7. Thanh cuộn tùy biến dùng chung --- */
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--b-color); border-radius: 10px; }
-
-  /* --- 8. Navbar & tiện ích chung --- */
-  .glass-nav { background: var(--surface-glass); backdrop-filter: blur(12px); border-bottom: 1px solid var(--b-color); transition: background-color 0.3s ease, border-color 0.3s ease; }
-  .nav-link { color: var(--text-sub); transition: color 0.2s ease, text-shadow 0.2s ease; cursor: pointer; }
-  .nav-link:hover { color: var(--primary); text-shadow: 0 0 10px var(--fx-glow); }
-
-  .cat-dropdown { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--b-color); border-radius: 12px; padding: 1.5rem; gap: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-  .nav-item-cat:hover .cat-dropdown { display: flex; }
-  /* TỐI ƯU: tăng từ 64px lên 76px. Ảnh gốc (tws/wired/speaker-*.png) là
-     line-art nét mảnh, kích thước danh nghĩa ~220x300px và có chữ nhãn vẽ
-     sẵn bên trong (chiếm ~30% chiều cao). Ở 64px, ảnh <img> con chỉ được
-     w-7 (28px) nên tỉ lệ icon/khung ép quá nhỏ (0.4375) so với panel
-     "Choose Category" (0.667) — nét mảnh bị vỡ nhòe khi co xuống dưới
-     ~40px thực hiển thị. Tăng khung + đồng bộ tỉ lệ img bên dưới (w-7 → w-11)
-     để icon rõ nét ngang bằng panel, không cần sửa lại file ảnh gốc. */
-  .cat-icon-box { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--b-color); display: flex; align-items: center; justify-content: center; transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, transform 0.2s ease; cursor: pointer; color: var(--text-sub); }
-  .cat-icon-box:hover { border-color: var(--primary); box-shadow: 0 0 20px var(--fx-glow); color: var(--primary); transform: translateY(-2px); }
-
-  .text-gradient { background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: background 0.5s ease; }
-  .search-input { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-  .search-input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--fx-glow); outline: none; }
-
-  /* NÚT TOGGLE THEME (mặt trời/mặt trăng) */
-  .toggle-btn {
-    width: 38px; height: 38px; border-radius: 50%; position: relative; cursor: pointer; overflow: hidden;
-    background: radial-gradient(circle, #1a1a1a, #0b0b0b);
-    border: 1px solid var(--b-color);
-    box-shadow: 0 0 10px var(--fx-glow); transition: transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.25s ease, border-color 0.25s ease;
-  }
-  .toggle-btn:hover { border-color: var(--primary); box-shadow: 0 0 16px var(--fx-glow); }
-  .toggle-btn.rotate { transform: rotate(180deg); }
-  .icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .sun, .moon { transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s ease; width: 20px; height: 20px; color: var(--primary); filter: drop-shadow(0 0 5px var(--fx-glow)); }
-  .sun { transform: translateY(-100%); opacity: 0; }
-  .moon { position: absolute; transform: translateY(0); opacity: 1; }
-  .theme-gold .sun { transform: translateY(0); opacity: 1; }
-  .theme-gold .moon { transform: translateY(100%); opacity: 0; }
-
-  /* NÚT + POPOVER CHỈNH ĐỘ SÁNG MÀU (INTENSITY) */
-  .intensity-wrap { position: relative; }
-  .intensity-btn {
-    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--b-color); color: var(--text-sub); cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .intensity-btn:hover, .intensity-btn.active { border-color: var(--primary); color: var(--primary); box-shadow: 0 0 12px var(--fx-glow); }
-  .intensity-pop {
-    display: none; position: absolute; top: calc(100% + 12px); right: 0; width: 220px;
-    background: var(--surface); border: 1px solid var(--b-color); border-radius: 14px;
-    padding: 1.1rem 1.2rem; box-shadow: 0 15px 40px rgba(0,0,0,0.7);
-    animation: pop-in 0.2s cubic-bezier(.2,.8,.2,1);
-  }
-  .intensity-pop.show { display: block; }
-  .intensity-slider { @apply slider-control; }
-
-  /* --- CSS phần Control Panel (giữ nguyên hành vi cũ) --- */
-  .ui-disabled-zone { opacity: 0.3; filter: grayscale(100%); pointer-events: none; user-select: none; }
-  .ui-disabled-hint { display: block; font-size: 11px; color: var(--text-sub); margin-top: 5px; font-style: italic; }
-  .glow-text { text-shadow: 0 0 10px var(--fx-glow); }
-
-  input[name="anc_choice"][value="No"]:checked ~ .toggle-pill {
-    transform: translateX(100%);
-    background: var(--text-sub);
-    box-shadow: none;
-  }
-
-  .img-gold { display: none; }
-  html.theme-gold .img-gold { display: block; }
-  html.theme-gold .img-cyan { display: none; }
-
-  .cat-img-wrapper { opacity: 0.55; filter: grayscale(100%) brightness(1.5); transition: opacity 0.25s ease, filter 0.25s ease; }
-  input[type="radio"]:checked + .cat-frame .cat-img-wrapper { opacity: 1; filter: grayscale(0%); }
-  .cat-frame:hover { transform: translateY(-2px); }
-  .cat-frame { transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease; }
 
   .ctrl-select {
-    appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23A3A3A3' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/></svg>");
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%2364748B' stroke-width='2' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/></svg>");
     background-repeat: no-repeat;
-    background-position: right 8px center;
+    background-position: right 10px center;
     background-size: 14px;
-    padding-right: 26px !important;
+    padding-right: 32px !important;
     cursor: pointer;
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--input-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  .ctrl-select:hover { border-color: var(--primary); }
-  .ctrl-select:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--fx-glow); outline: none; }
-  .ctrl-select:active { transform: scale(0.98); }
-
-  .price-field-wrap { position: relative; flex: 1; }
-  .price-field { @apply input-field; text-align: center; padding: 10px 30px 10px 12px; font-size: 13px; }
-  .price-currency {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    font-size: 11px; font-weight: 700; color: var(--text-sub); pointer-events: none;
-    transition: color 0.25s ease;
+  .ctrl-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--fx-glow);
   }
-  .price-field-wrap:focus-within .price-currency { color: var(--primary); }
-  .price-arrow-icon { color: var(--text-sub); flex-shrink: 0; transition: color 0.3s ease, transform 0.3s ease; }
 
-  .anc-toggle-wrap { height: 42px; }
-  #anc-pill { will-change: transform; }
-  .anc-opt-label { color: var(--text-sub); }
+  /* --- 4. SLIDER KIM LOẠI 3D (Ảnh 1) --- */
+  .slider-control {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 4px;
+    background: var(--b-color);
+    outline: none; cursor: pointer;
+  }
+  html.theme-gold .slider-control {
+    background: linear-gradient(90deg, #332B14, #735C1D);
+  }
+  .slider-control::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--text-heading);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  html.theme-gold .slider-control::-webkit-slider-thumb {
+    background: radial-gradient(circle at 35% 30%, #FFEFA6 0%, #C9A94D 60%, #7D5D17 100%);
+    border: 1px solid #FFEFA6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5), 0 0 10px rgba(201, 169, 77, 0.5);
+  }
+  .slider-control::-webkit-slider-thumb:hover { transform: scale(1.18); }
 
-  .battery-wrap { position: relative; }
-  .battery-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); transition: color 0.25s ease; pointer-events: none; }
-  .battery-input { @apply input-field; padding-left: 34px !important; text-align: left !important; }
-  .battery-wrap:focus-within .battery-icon { color: var(--primary); }
+  /* --- 5. NAVBAR & UTILITIES --- */
+  .glass-nav {
+    background: var(--surface-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--b-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
 
-  .run-btn { @apply btn-shine; }
+  .text-gradient {
+    background: var(--primary-grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
+  .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+
+  .ui-disabled-zone { opacity: 0.35; filter: grayscale(100%); pointer-events: none; user-select: none; }
   .modal-overlay { transition: opacity 0.25s ease; }
-  .animate-modal-in { animation: modal-in 0.28s cubic-bezier(.2,.8,.2,1); }
+  .animate-modal-in { animation: modal-in 0.25s cubic-bezier(.16, 1, 0.3, 1); }
 }
 
-/* =================================================================== */
-/* KEYFRAMES + REDUCED MOTION — để ngoài layer, luôn được giữ nguyên   */
-/* =================================================================== */
 @keyframes run-shine { from { transform: translateX(-150%) skewX(-20deg); } to { transform: translateX(350%) skewX(-20deg); } }
-@keyframes pop-in { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes modal-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes row-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-#results-body tr:nth-child(-n+5) { animation: row-in 0.35s cubic-bezier(.2,.8,.2,1) both; }
-#results-body tr:nth-child(1) { animation-delay: 0.02s; }
-#results-body tr:nth-child(2) { animation-delay: 0.07s; }
-#results-body tr:nth-child(3) { animation-delay: 0.12s; }
-#results-body tr:nth-child(4) { animation-delay: 0.17s; }
-#results-body tr:nth-child(5) { animation-delay: 0.22s; }
-#results-body tr:nth-child(n+6) { opacity: 1; }
-@keyframes pulse-loading { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
