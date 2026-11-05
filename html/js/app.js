@@ -170,7 +170,7 @@ if (searchInput) {
                                     <div class="font-bold text-[var(--text-heading)]">${escapeHtml(item.model_name)}</div>
                                     <div class="text-[11px] text-[var(--text-sub)] mt-0.5">${escapeHtml(item.brand)} · <span class="text-[var(--primary)] font-bold">${vndFormatter.format(item.price_vnd)}</span></div>
                                 </div>
-                                <span class="text-[10px] px-2.5 py-1 bg-[var(--surface-alt)] text-[var(--primary)] rounded-full font-bold">+ Thêm</span>
+                                <span class="text-[10px] px-3 py-1 btn-secondary !rounded-full font-bold">+ Thêm</span>
                             </li>
                         `;
                     }).join('');

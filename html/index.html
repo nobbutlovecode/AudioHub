@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
+    <!-- Background Canvas for Cursor Interaction (Spec Section 3) -->
+    <canvas id="cursor-bg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
 
     <!-- NAVBAR -->
     <nav class="glass-nav fixed top-0 left-0 w-full z-50 px-4 md:px-10 py-3.5 flex justify-between items-center">
@@ -55,7 +57,7 @@
             <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-sub)] hover:text-[var(--primary)] transition-colors cursor-pointer" onclick="openModal('modal-donate')">Donate</span>
             
             <!-- NÚT CHUYỂN THEME: CLEAN LIGHT ⇄ BLACK GOLD -->
-            <button onclick="switchThemeEffect(this)" class="w-9 h-9 rounded-full border border-[var(--b-color)] bg-[var(--surface)] flex items-center justify-center text-sm shadow-sm transition-transform active:scale-90" title="Chuyển theme Clean Light / Black Gold" aria-label="Toggle Theme">
+            <button onclick="switchThemeEffect(this)" class="btn-icon !w-9 !h-9 !rounded-xl transition-transform active:scale-90" title="Chuyển theme Clean Light / Black Gold" aria-label="Toggle Theme">
                 <span id="theme-btn-icon">🌙</span>
             </button>
 
@@ -480,6 +482,7 @@
             updateUIState();
         });
     </script>
+    <script src="/html/js/cursor-fx.js"></script>
     <script src="/html/js/app.js"></script>
 </body>
 </html>

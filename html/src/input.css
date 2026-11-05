@@ -44,15 +44,30 @@
     --input-text: #0F172A;
     --input-placeholder: #94A3B8;
 
-    /* Button Colors */
-    --btn-primary-bg: #0F172A;
+    /* Button Colors with Specular Gloss & Luster (Design System - Image 2) */
+    --btn-primary-bg: linear-gradient(180deg, #2D323C 0%, #171A21 60%, #0B0D11 100%);
     --btn-primary-text: #FFFFFF;
+    --btn-primary-border: rgba(255, 255, 255, 0.16);
+    --btn-primary-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.35), inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.5), 0 4px 14px -1px rgba(15, 23, 42, 0.25), 0 2px 5px -1px rgba(15, 23, 42, 0.15);
+    --btn-primary-hover-shadow: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.5), 0 8px 24px -2px rgba(15, 23, 42, 0.35);
 
-    /* Category Disc */
-    --disc-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+    --btn-secondary-bg: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 60%, #EEF2F6 100%);
+    --btn-secondary-text: #0F172A;
+    --btn-secondary-border: #D1D5DB;
+    --btn-secondary-shadow: inset 0 1px 0 0 #FFFFFF, 0 2px 6px rgba(15, 23, 42, 0.06);
+    --btn-secondary-hover-shadow: inset 0 1px 0 0 #FFFFFF, 0 4px 14px rgba(15, 23, 42, 0.1);
 
-    --scrollbar-track: transparent;
-    --scrollbar-thumb: #CBD5E1;
+    /* Category Disc Shadows (Image 4) */
+    --disc-shadow: 0 16px 28px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.08);
+
+    /* Scrollbar System (Image 2 - Clean Light) */
+    --scrollbar-width: 10px;
+    --scrollbar-track: #F1F5F9;
+    --scrollbar-thumb: linear-gradient(180deg, #94A3B8 0%, #64748B 100%);
+    --scrollbar-thumb-hover: linear-gradient(180deg, #64748B 0%, #334155 100%);
+    --scrollbar-thumb-border: #F1F5F9;
+    --scrollbar-thumb-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 2px rgba(15, 23, 42, 0.12);
+    --scrollbar-thumb-flat: #64748B;
 
     --success: #10B981;
     --success-bg: #ECFDF5;
@@ -96,15 +111,30 @@
     --input-text: #FFFFFF;
     --input-placeholder: #6B7280;
 
-    /* Button Colors */
-    --btn-primary-bg: var(--primary-grad);
+    /* Button Colors with Hero Metallic Gold Gloss (Design System - Darker, High-End Champagne/Royal Gold) */
+    --btn-primary-bg: linear-gradient(180deg, #D4AF37 0%, #BA9026 35%, #8C6A12 75%, #5E4407 100%);
     --btn-primary-text: #0A0A0A;
+    --btn-primary-border: rgba(212, 175, 55, 0.5);
+    --btn-primary-shadow: inset 0 1px 0.8px 0 rgba(255, 255, 255, 0.45), inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.45), 0 4px 16px 0 rgba(184, 142, 36, 0.3), 0 2px 6px 0 rgba(0, 0, 0, 0.6);
+    --btn-primary-hover-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.25), 0 0 22px rgba(212, 175, 55, 0.48), 0 6px 22px rgba(184, 142, 36, 0.42);
 
-    /* Category Disc */
-    --disc-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.9), 0 0 20px rgba(201, 169, 77, 0.25);
+    --btn-secondary-bg: linear-gradient(180deg, #24262E 0%, #15161A 55%, #0F1013 100%);
+    --btn-secondary-text: #F5D97A;
+    --btn-secondary-border: rgba(201, 169, 77, 0.38);
+    --btn-secondary-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.18), inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.6), 0 4px 14px rgba(0, 0, 0, 0.6);
+    --btn-secondary-hover-shadow: inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28), 0 0 18px rgba(201, 169, 77, 0.35), 0 6px 18px rgba(0, 0, 0, 0.7);
 
-    --scrollbar-track: transparent;
-    --scrollbar-thumb: #333333;
+    /* Category Disc Shadows (Image 4) */
+    --disc-shadow: 0 20px 36px -4px rgba(0, 0, 0, 0.95), 0 0 24px rgba(201, 169, 77, 0.25);
+
+    /* Scrollbar System (Image 2 - Black Gold Metallic Pill) */
+    --scrollbar-width: 10px;
+    --scrollbar-track: #0D0E12;
+    --scrollbar-thumb: linear-gradient(180deg, #D4AF37 0%, #BA9026 40%, #8C6A12 80%, #5E4407 100%);
+    --scrollbar-thumb-hover: linear-gradient(180deg, #E5C252 0%, #C9A033 40%, #9C7718 80%, #6E510B 100%);
+    --scrollbar-thumb-border: #0D0E12;
+    --scrollbar-thumb-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 0 10px rgba(201, 169, 77, 0.4);
+    --scrollbar-thumb-flat: #C9A94D;
 
     --success: #34D399;
     --success-bg: rgba(52, 211, 153, 0.12);
@@ -112,7 +142,38 @@
     --error-bg: rgba(248, 113, 113, 0.12);
   }
 
-  * { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); box-sizing: border-box; }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-flat, #C9A94D) var(--scrollbar-track);
+    box-sizing: border-box;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  /* GLOBAL WEBKIT SCROLLBAR SPECIFICATION (ẢNH 2)                         */
+  /* ═══════════════════════════════════════════════════════════════════════ */
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-width, 10px);
+    height: var(--scrollbar-width, 10px);
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+    border: 2px solid var(--scrollbar-thumb-border);
+    background-clip: padding-box;
+    box-shadow: var(--scrollbar-thumb-shadow);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+    box-shadow: var(--scrollbar-thumb-shadow);
+  }
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
   html { scroll-behavior: smooth; overflow-x: clip; }
 
   body {
@@ -168,6 +229,7 @@
   html.theme-gold .img-cat-light { display: none; }
   html.theme-gold .img-cat-gold { display: block; }
 
+  /* Category Discs with bottom diffused shadow (Image 4) */
   .category-disc {
     width: 96px;
     height: 96px;
@@ -178,60 +240,98 @@
     justify-content: center;
     cursor: pointer;
     box-shadow: var(--disc-shadow);
-    transition: transform 0.25s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.25s ease;
+    transition: transform 0.25s cubic-bezier(.34, 1.56, .64, 1), box-shadow 0.25s ease, border-color 0.25s ease;
   }
   .category-disc:hover {
     transform: translateY(-4px) scale(1.05);
   }
-  input[type="radio"]:checked + .category-disc {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 16px 35px -4px rgba(201, 169, 77, 0.4), var(--disc-shadow);
+  html:not(.theme-gold) .category-disc {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+  }
+  html:not(.theme-gold) .category-disc:hover {
+    box-shadow: 0 20px 36px -4px rgba(15, 23, 42, 0.22), 0 8px 16px -2px rgba(15, 23, 42, 0.1);
   }
   html:not(.theme-gold) input[type="radio"]:checked + .category-disc {
-    box-shadow: 0 14px 28px -4px rgba(15, 23, 42, 0.2), var(--disc-shadow);
+    transform: translateY(-4px) scale(1.05);
+    border-color: #0F172A;
+    box-shadow: 0 22px 38px -4px rgba(15, 23, 42, 0.28), 0 10px 18px -2px rgba(15, 23, 42, 0.15);
   }
 
-  /* --- 2. BUTTONS --- */
+  html.theme-gold .category-disc {
+    background: #0E0F12;
+    border: 1.5px solid rgba(201, 169, 77, 0.38);
+  }
+  html.theme-gold .category-disc:hover {
+    border-color: #F5D97A;
+    box-shadow: 0 26px 44px -4px rgba(0, 0, 0, 0.98), 0 0 34px rgba(201, 169, 77, 0.45);
+  }
+  html.theme-gold input[type="radio"]:checked + .category-disc {
+    transform: translateY(-4px) scale(1.05);
+    border-color: #F5D97A;
+    box-shadow: 0 26px 44px -4px rgba(0, 0, 0, 0.98), 0 0 40px rgba(201, 169, 77, 0.6);
+  }
+
+  /* --- 2. BUTTONS WITH SPECULAR GLOSS & LUSTER (ẢNH 2 & 3) --- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 font-bold text-sm tracking-wide select-none;
+    @apply inline-flex items-center justify-center gap-2 font-bold text-sm tracking-wide select-none cursor-pointer;
     border-radius: var(--b-radius);
     padding: 10px 22px;
-    transition: transform 0.2s cubic-bezier(.4, 0, .2, 1), box-shadow 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+    border: 1px solid transparent;
+    transition: transform 0.2s cubic-bezier(.4, 0, .2, 1), box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    will-change: transform, box-shadow;
   }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+  .btn:active { transform: translateY(1px) scale(0.985); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; filter: grayscale(1); }
 
   .btn-primary {
     @apply btn;
     background: var(--btn-primary-bg);
     color: var(--btn-primary-text);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+    border-color: var(--btn-primary-border);
+    box-shadow: var(--btn-primary-shadow);
   }
-  .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); }
-  html.theme-gold .btn-primary {
-    box-shadow: 0 4px 18px rgba(201, 169, 77, 0.35);
+  .btn-primary:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--btn-primary-hover-shadow);
+    filter: brightness(1.04);
   }
-  html.theme-gold .btn-primary:hover {
-    box-shadow: 0 6px 26px rgba(201, 169, 77, 0.55);
+  .btn-primary:active {
+    transform: translateY(1px) scale(0.985);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
   }
 
   .btn-secondary {
     @apply btn;
-    background: var(--surface);
-    border: 1px solid var(--b-color);
-    color: var(--text-main);
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+    border-color: var(--btn-secondary-border);
+    box-shadow: var(--btn-secondary-shadow);
   }
-  .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-secondary:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--btn-secondary-hover-shadow);
+  }
+  .btn-secondary:active {
+    transform: translateY(1px) scale(0.985);
+  }
 
   .btn-icon {
     @apply btn !p-0;
     width: 38px; height: 38px;
-    border-radius: 50%;
-    background: var(--surface);
-    border: 1px solid var(--b-color);
-    color: var(--text-sub);
+    border-radius: 12px;
+    background: var(--btn-secondary-bg);
+    border: 1px solid var(--btn-secondary-border);
+    box-shadow: var(--btn-secondary-shadow);
+    color: var(--btn-secondary-text);
   }
-  .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-icon:hover {
+    transform: translateY(-1px);
+    color: var(--primary);
+    border-color: var(--primary);
+    box-shadow: var(--btn-secondary-hover-shadow);
+  }
+  .btn-icon:active { transform: translateY(1px) scale(0.97); }
 
   /* Sweep-shine effect cho Run Button */
   .btn-shine { position: relative; overflow: hidden; }
@@ -311,14 +411,21 @@
   /* --- 5. NÚT + POPOVER CHỈNH ĐỘ SÁNG / ĐẬM NHẠT MÀU (INTENSITY) --- */
   .intensity-wrap { position: relative; }
   .intensity-btn {
-    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--b-color); color: var(--text-sub); cursor: pointer;
-    background: var(--surface);
-    transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    background: var(--btn-secondary-bg);
+    border: 1px solid var(--btn-secondary-border);
+    box-shadow: var(--btn-secondary-shadow);
+    color: var(--btn-secondary-text);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(.4, 0, .2, 1), border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
   .intensity-btn:hover, .intensity-btn.active {
-    border-color: var(--primary); color: var(--primary); box-shadow: 0 0 12px var(--fx-glow);
+    transform: translateY(-1px);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: var(--btn-secondary-hover-shadow);
   }
+  .intensity-btn:active { transform: translateY(1px); }
   .intensity-pop {
     display: none; position: absolute; top: calc(100% + 10px); right: 0; width: 230px;
     background: var(--surface); border: 1px solid var(--b-color); border-radius: 14px;
@@ -344,9 +451,15 @@
     -webkit-text-fill-color: transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 9999px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+    border: 1.5px solid var(--scrollbar-thumb-border);
+    background-clip: padding-box;
+    box-shadow: var(--scrollbar-thumb-shadow);
+  }
 
   .ui-disabled-zone { opacity: 0.35; filter: grayscale(100%); pointer-events: none; user-select: none; }
   .modal-overlay { transition: opacity 0.25s ease; }
