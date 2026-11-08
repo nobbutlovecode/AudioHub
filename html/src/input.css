@@ -142,24 +142,33 @@
     --error-bg: rgba(248, 113, 113, 0.12);
   }
 
+  html, body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
   * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb-flat, #C9A94D) var(--scrollbar-track);
     box-sizing: border-box;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════ */
-  /* GLOBAL WEBKIT SCROLLBAR SPECIFICATION (ẢNH 2)                         */
+  /* INTERNAL CONTAINER SCROLLBAR SPECIFICATION (MATCHING SPEC IMAGE)       */
   /* ═══════════════════════════════════════════════════════════════════════ */
-  ::-webkit-scrollbar {
-    width: var(--scrollbar-width, 10px);
-    height: var(--scrollbar-width, 10px);
+  .custom-scrollbar::-webkit-scrollbar {
+    width: var(--scrollbar-width, 8px);
+    height: var(--scrollbar-width, 8px);
   }
-  ::-webkit-scrollbar-track {
+  .custom-scrollbar::-webkit-scrollbar-track {
     background: var(--scrollbar-track);
     border-radius: 9999px;
   }
-  ::-webkit-scrollbar-thumb {
+  .custom-scrollbar::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
     border-radius: 9999px;
     border: 2px solid var(--scrollbar-thumb-border);
@@ -167,7 +176,7 @@
     box-shadow: var(--scrollbar-thumb-shadow);
     transition: background 0.2s ease, box-shadow 0.2s ease;
   }
-  ::-webkit-scrollbar-thumb:hover {
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-thumb-hover);
     box-shadow: var(--scrollbar-thumb-shadow);
   }

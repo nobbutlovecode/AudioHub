@@ -9,10 +9,303 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/html/dist/output.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        /* ========================================================================== */
+        /* CUSTOM SCROLLBAR & SLIDER THEO DUNG THIET KE GOC (CLEAN LIGHT & BLACK GOLD)*/
+        /* ========================================================================== */
+        html, body {
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+        *::-webkit-scrollbar,
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        /* 1. Capsule Dock Container */
+        #custom-scroll-dock {
+            position: fixed;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            user-select: none;
+            height: min(440px, 70vh);
+        }
+
+        .custom-scroll-capsule {
+            width: 20px;
+            height: 100%;
+            background: rgba(248, 249, 250, 0.94);
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.12), inset 0 1px 1px #FFFFFF;
+            border-radius: 9999px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 2px;
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Black Gold Capsule Styling */
+        html.theme-gold .custom-scroll-capsule {
+            background: rgba(18, 19, 24, 0.94);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.85), 0 0 16px rgba(212, 175, 55, 0.15);
+        }
+
+        /* 2. Top & Bottom Chevron Buttons */
+        .custom-scroll-btn {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #64748B;
+            transition: color 0.15s ease, transform 0.15s ease;
+            background: none;
+            border: none;
+            padding: 0;
+            outline: none;
+        }
+        .custom-scroll-btn:hover {
+            color: #0F172A;
+            transform: scale(1.2);
+        }
+        html.theme-gold .custom-scroll-btn {
+            color: #A3A3B2;
+        }
+        html.theme-gold .custom-scroll-btn:hover {
+            color: #F5D97A;
+            transform: scale(1.2);
+        }
+        .custom-scroll-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* 3. Central Rail Track */
+        .custom-scroll-rail {
+            width: 4px;
+            flex: 1;
+            margin: 6px 0;
+            position: relative;
+            background: #E2E8F0;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background 0.25s ease;
+        }
+        html.theme-gold .custom-scroll-rail {
+            background: rgba(212, 175, 55, 0.35);
+        }
+
+        /* 4. Thumb (Metallic Pill / Knob Slider) */
+        .custom-scroll-thumb {
+            width: 12px;
+            height: 38px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 9999px;
+            cursor: grab;
+            transition: box-shadow 0.2s ease, transform 0.1s ease;
+            /* Clean Light: Dark metallic slate pill with glossy bevel */
+            background: linear-gradient(180deg, #475569 0%, #334155 45%, #1E293B 100%);
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+            border: 1.5px solid #FFFFFF;
+        }
+        .custom-scroll-thumb:hover {
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.4), inset 0 1px 1.5px rgba(255, 255, 255, 0.7);
+        }
+        .custom-scroll-thumb:active {
+            cursor: grabbing;
+            transform: translateX(-50%) scale(1.06);
+        }
+
+        /* Black Gold: Metallic gold pill & glowing aura matching Vertical Slider */
+        html.theme-gold .custom-scroll-thumb {
+            background: linear-gradient(180deg, #F5D97A 0%, #D4AF37 40%, #B89026 80%, #78570D 100%);
+            border: 1.5px solid #14151B;
+            box-shadow: 0 0 16px rgba(212, 175, 55, 0.7), 0 2px 8px rgba(0, 0, 0, 0.8), inset 0 1px 1.5px rgba(255, 255, 255, 0.8);
+        }
+        html.theme-gold .custom-scroll-thumb::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 12px;
+            background: rgba(20, 21, 27, 0.55);
+            border-radius: 1px;
+        }
+        html.theme-gold .custom-scroll-thumb:hover {
+            box-shadow: 0 0 24px rgba(212, 175, 55, 0.95), 0 3px 10px rgba(0, 0, 0, 0.9), inset 0 1px 2px rgba(255, 255, 255, 0.95);
+        }
+
+        /* 5. Ruler Marks (Vertical Slider 0 to 30 scale matching Image 2) */
+        .custom-scroll-ruler {
+            position: absolute;
+            right: 28px;
+            top: 28px;
+            bottom: 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(4px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        html.theme-gold #custom-scroll-dock:hover .custom-scroll-ruler,
+        html.theme-gold #custom-scroll-dock.is-scrolling .custom-scroll-ruler {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .ruler-tick {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #64748B;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'Sora', sans-serif;
+            line-height: 1;
+        }
+        html.theme-gold .ruler-tick {
+            color: rgba(212, 175, 55, 0.55);
+        }
+        .ruler-tick.active {
+            color: #D4AF37 !important;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+        }
+        .ruler-tick-bar {
+            width: 6px;
+            height: 1px;
+            background: currentColor;
+        }
+        .ruler-tick-bar.major {
+            width: 10px;
+            height: 1.5px;
+        }
+
+        /* 6. Numeric Readout / Badge (Matching the gold '18' readout in Image 2) */
+        .custom-scroll-indicator {
+            position: absolute;
+            right: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #FFFFFF;
+            color: #0F172A;
+            border: 1px solid #CBD5E1;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            font-family: 'Sora', sans-serif;
+        }
+        html.theme-gold .custom-scroll-indicator {
+            background: transparent;
+            color: #F5D97A;
+            border: none;
+            box-shadow: none;
+            font-size: 18px;
+            font-weight: 800;
+            text-shadow: 0 0 12px rgba(212, 175, 55, 0.7);
+            right: 26px;
+        }
+        #custom-scroll-dock:hover .custom-scroll-indicator,
+        #custom-scroll-dock.is-scrolling .custom-scroll-indicator {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            #custom-scroll-dock {
+                right: 4px;
+                height: min(280px, 48vh);
+            }
+            .custom-scroll-ruler {
+                display: none !important;
+            }
+            .custom-scroll-capsule {
+                width: 14px;
+                padding: 4px 1px;
+            }
+            .custom-scroll-thumb {
+                width: 8px;
+                height: 24px;
+            }
+            .custom-scroll-btn {
+                width: 12px;
+                height: 12px;
+            }
+            .custom-scroll-btn svg {
+                width: 10px;
+                height: 10px;
+            }
+            .custom-scroll-indicator {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
     <!-- Background Canvas for Cursor Interaction (Spec Section 3) -->
     <canvas id="cursor-bg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-20"></canvas>
+
+    <!-- THANH CUON THIET KE THEO DUNG BAN MAU (CLEAN LIGHT & BLACK GOLD VERTICAL SLIDER) -->
+    <div id="custom-scroll-dock">
+        <!-- Ruler scale matching Vertical Slider in Black Gold mode (Image 2) -->
+        <div class="custom-scroll-ruler" id="sb-ruler">
+            <div class="ruler-tick" data-val="30"><span>30</span><span class="ruler-tick-bar major"></span></div>
+            <div class="ruler-tick" data-val="24"><span>24</span><span class="ruler-tick-bar major"></span></div>
+            <div class="ruler-tick" data-val="18"><span>18</span><span class="ruler-tick-bar major"></span></div>
+            <div class="ruler-tick" data-val="12"><span>12</span><span class="ruler-tick-bar major"></span></div>
+            <div class="ruler-tick" data-val="6"><span>6</span><span class="ruler-tick-bar major"></span></div>
+            <div class="ruler-tick" data-val="0"><span>0</span><span class="ruler-tick-bar major"></span></div>
+        </div>
+
+        <!-- Capsule Dock matching Image 1 & 2 -->
+        <div class="custom-scroll-capsule">
+            <!-- Nut mui ten len (Chevron Up) -->
+            <button id="sb-btn-up" onclick="scrollPageStep(-220)" class="custom-scroll-btn" title="Cuon len" aria-label="Cuon len">
+                <svg class="w-3.5 h-3.5 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+            </button>
+
+            <!-- Ranh truot trung tam (Rail) -->
+            <div id="sb-rail" class="custom-scroll-rail" onclick="handleRailClick(event)">
+                <!-- Con truot (Thumb / Slider Knob) -->
+                <div id="sb-thumb" class="custom-scroll-thumb">
+                    <!-- Hien thi so / scale doc theo kieu Slider Vertical Image 2 -->
+                    <span id="sb-badge" class="custom-scroll-indicator">0</span>
+                </div>
+            </div>
+
+            <!-- Nut mui ten xuong (Chevron Down) -->
+            <button id="sb-btn-down" onclick="scrollPageStep(220)" class="custom-scroll-btn" title="Cuon xuong" aria-label="Cuon xuong">
+                <svg class="w-3.5 h-3.5 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+    </div>
 
     <!-- NAVBAR -->
     <nav class="glass-nav fixed top-0 left-0 w-full z-50 px-4 md:px-10 py-3.5 flex justify-between items-center">
@@ -469,6 +762,136 @@
             }
         }
 
+        
+        // =========================================================================
+        // HE THONG DIEU KHIEN THANH CUON BULLETPROOF (RAF LOOP + MULTI-ELEMENT SYNC)
+        // =========================================================================
+        let isDraggingScroll = false;
+        let dragStartY = 0;
+        let dragStartScrollY = 0;
+        let scrollHideTimer = null;
+        let lastKnownScrollTop = -1;
+
+        function getScrollTop() {
+            const winY = window.pageYOffset || window.scrollY || 0;
+            const docY = document.documentElement ? document.documentElement.scrollTop : 0;
+            const bodyY = document.body ? document.body.scrollTop : 0;
+            const elY = document.scrollingElement ? document.scrollingElement.scrollTop : 0;
+            return Math.max(winY, docY, bodyY, elY);
+        }
+
+        function setScrollTop(val) {
+            window.scrollTo(0, val);
+            if (document.documentElement) document.documentElement.scrollTop = val;
+            if (document.body) document.body.scrollTop = val;
+            if (document.scrollingElement) document.scrollingElement.scrollTop = val;
+        }
+
+        function getScrollProgress() {
+            const scrollTop = getScrollTop();
+            const scrollHeight = Math.max(
+                document.documentElement.scrollHeight,
+                document.body.scrollHeight,
+                document.documentElement.offsetHeight,
+                document.body.offsetHeight
+            );
+            const clientHeight = window.innerHeight 
+                || (document.documentElement ? document.documentElement.clientHeight : 0) 
+                || (document.body ? document.body.clientHeight : 0) 
+                || 0;
+            const maxScroll = scrollHeight - clientHeight;
+            if (maxScroll <= 0) return 0;
+            return Math.max(0, Math.min(1, scrollTop / maxScroll));
+        }
+
+        function showScrollActivity() {
+            const dock = document.getElementById('custom-scroll-dock');
+            const badge = document.getElementById('sb-badge');
+            if (dock) {
+                dock.classList.add('is-scrolling');
+                if (badge) badge.classList.remove('opacity-0');
+                clearTimeout(scrollHideTimer);
+                scrollHideTimer = setTimeout(() => {
+                    if (!isDraggingScroll) {
+                        dock.classList.remove('is-scrolling');
+                        if (badge) badge.classList.add('opacity-0');
+                    }
+                }, 1200);
+            }
+        }
+
+        function scrollPageStep(deltaPx) {
+            const current = getScrollTop();
+            setScrollTop(current + deltaPx);
+            showScrollActivity();
+            updateCustomScrollUI();
+        }
+
+        function handleRailClick(e) {
+            if (e.target.id === 'sb-thumb' || e.target.closest('#sb-thumb')) return;
+            const rail = document.getElementById('sb-rail');
+            const thumb = document.getElementById('sb-thumb');
+            if (!rail || !thumb) return;
+
+            const rect = rail.getBoundingClientRect();
+            const clickY = e.clientY - rect.top;
+            const railHeight = rail.clientHeight;
+            const thumbHeight = thumb.clientHeight || 38;
+            const maxTravel = railHeight - thumbHeight;
+            if (maxTravel <= 0) return;
+
+            const targetTop = Math.max(0, Math.min(maxTravel, clickY - thumbHeight / 2));
+            const progress = targetTop / maxTravel;
+            const scrollHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) - window.innerHeight;
+            setScrollTop(progress * scrollHeight);
+            showScrollActivity();
+            updateCustomScrollUI();
+        }
+
+        function updateCustomScrollUI() {
+            const rail = document.getElementById('sb-rail');
+            const thumb = document.getElementById('sb-thumb');
+            const badge = document.getElementById('sb-badge');
+            if (!rail || !thumb) return;
+
+            const railHeight = rail.clientHeight;
+            const thumbHeight = thumb.clientHeight || 38;
+            const maxTravel = railHeight - thumbHeight;
+            if (maxTravel <= 0) return;
+
+            const progress = getScrollProgress();
+            const topPx = progress * maxTravel;
+
+            thumb.style.top = topPx + 'px';
+
+            const scaleVal = Math.round(progress * 30);
+            if (badge) {
+                const isGold = document.documentElement.classList.contains('theme-gold');
+                badge.innerText = isGold ? scaleVal : Math.round(progress * 100) + '%';
+            }
+
+            const rulerTicks = document.querySelectorAll('.ruler-tick');
+            rulerTicks.forEach(tick => {
+                const val = parseInt(tick.getAttribute('data-val') || '0', 10);
+                if (Math.abs(val - scaleVal) <= 3) {
+                    tick.classList.add('active');
+                } else {
+                    tick.classList.remove('active');
+                }
+            });
+        }
+
+        // Vong lap requestAnimationFrame kiem tra vi tri cuon lien tuc (Bulletproof)
+        function checkScrollLoop() {
+            const currentScrollTop = getScrollTop();
+            if (currentScrollTop !== lastKnownScrollTop) {
+                lastKnownScrollTop = currentScrollTop;
+                updateCustomScrollUI();
+            }
+            requestAnimationFrame(checkScrollLoop);
+        }
+        requestAnimationFrame(checkScrollLoop);
+
         window.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('audiohub-theme');
             if (savedTheme === 'light') {
@@ -480,6 +903,96 @@
             }
             loadIntensityForCurrentTheme();
             updateUIState();
+
+            // Khoi tao cac su kien cho thanh cuon Capsule
+            const thumb = document.getElementById('sb-thumb');
+            const rail = document.getElementById('sb-rail');
+
+            if (thumb && rail) {
+                // Keo tha chuot
+                thumb.addEventListener('mousedown', (e) => {
+                    isDraggingScroll = true;
+                    dragStartY = e.clientY;
+                    const el = document.scrollingElement || document.documentElement;
+                    dragStartScrollY = window.pageYOffset || el.scrollTop || 0;
+                    document.body.style.userSelect = 'none';
+                    showScrollActivity();
+                    e.preventDefault();
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDraggingScroll) return;
+                    const deltaY = e.clientY - dragStartY;
+                    const railHeight = rail.clientHeight;
+                    const thumbHeight = thumb.clientHeight || 38;
+                    const maxTravel = railHeight - thumbHeight;
+                    if (maxTravel <= 0) return;
+                    const el = document.scrollingElement || document.documentElement;
+                    const scrollHeight = Math.max(el.scrollHeight, document.body.scrollHeight) - window.innerHeight;
+                    const scrollDelta = (deltaY / maxTravel) * scrollHeight;
+                    window.scrollTo(0, dragStartScrollY + scrollDelta);
+                    updateCustomScrollUI();
+                    showScrollActivity();
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (isDraggingScroll) {
+                        isDraggingScroll = false;
+                        document.body.style.userSelect = '';
+                        showScrollActivity();
+                    }
+                });
+
+                // Keo tha cam ung tren dien thoai
+                thumb.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 1) {
+                        isDraggingScroll = true;
+                        dragStartY = e.touches[0].clientY;
+                        const el = document.scrollingElement || document.documentElement;
+                        dragStartScrollY = window.pageYOffset || el.scrollTop || 0;
+                        showScrollActivity();
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchmove', (e) => {
+                    if (!isDraggingScroll || e.touches.length === 0) return;
+                    const deltaY = e.touches[0].clientY - dragStartY;
+                    const railHeight = rail.clientHeight;
+                    const thumbHeight = thumb.clientHeight || 38;
+                    const maxTravel = railHeight - thumbHeight;
+                    if (maxTravel <= 0) return;
+                    const el = document.scrollingElement || document.documentElement;
+                    const scrollHeight = Math.max(el.scrollHeight, document.body.scrollHeight) - window.innerHeight;
+                    const scrollDelta = (deltaY / maxTravel) * scrollHeight;
+                    window.scrollTo(0, dragStartScrollY + scrollDelta);
+                    updateCustomScrollUI();
+                    showScrollActivity();
+                }, { passive: true });
+
+                window.addEventListener('touchend', () => {
+                    isDraggingScroll = false;
+                });
+            }
+
+            // Dong bo thanh cuon voi trang web
+            window.addEventListener('scroll', () => {
+                updateCustomScrollUI();
+                showScrollActivity();
+            }, { passive: true });
+
+            document.addEventListener('scroll', () => {
+                updateCustomScrollUI();
+                showScrollActivity();
+            }, { passive: true });
+
+            window.addEventListener('wheel', () => {
+                requestAnimationFrame(updateCustomScrollUI);
+            }, { passive: true });
+
+            window.addEventListener('resize', updateCustomScrollUI, { passive: true });
+
+            setTimeout(updateCustomScrollUI, 50);
+            setTimeout(updateCustomScrollUI, 300);
         });
     </script>
     <script src="/html/js/cursor-fx.js"></script>
