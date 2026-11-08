@@ -32,7 +32,7 @@
             canvas.style.width = '100vw';
             canvas.style.height = '100vh';
             canvas.style.pointerEvents = 'none';
-            canvas.style.zIndex = '0';
+            canvas.style.zIndex = '25';
             document.body.prepend(canvas);
         }
 

@@ -12,7 +12,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between">
     <!-- Background Canvas for Cursor Interaction (Spec Section 3) -->
-    <canvas id="cursor-bg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+    <canvas id="cursor-bg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-20"></canvas>
 
     <!-- NAVBAR -->
     <nav class="glass-nav fixed top-0 left-0 w-full z-50 px-4 md:px-10 py-3.5 flex justify-between items-center">
@@ -30,23 +30,23 @@
                 <!-- Dropdown danh mục với icon HD chuẩn -->
                 <div class="cat-dropdown hidden group-hover:flex absolute top-full left-1/2 -translate-x-1/2 bg-[var(--surface)] border border-[var(--b-color)] rounded-2xl p-5 gap-6 shadow-2xl z-50">
                     <div class="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform">
-                        <div class="w-14 h-14 rounded-full overflow-hidden">
-                            <img src="/html/image/cat_tws_light_hd.png" alt="TWS" class="img-cat-light w-full h-full object-contain">
-                            <img src="/html/image/cat_tws_gold_hd.png" alt="TWS" class="img-cat-gold w-full h-full object-contain">
+                        <div class="w-14 h-14 rounded-full overflow-hidden p-1 bg-[var(--surface-alt)] border border-[var(--b-color)]">
+                            <img src="/html/image/cat_tws_light_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="TWS" class="img-cat-light w-full h-full object-contain">
+                            <img src="/html/image/cat_tws_gold_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="TWS" class="img-cat-gold w-full h-full object-contain">
                         </div>
                         <span class="text-[10px] mt-2 font-bold tracking-wider text-[var(--text-main)]">TWS</span>
                     </div>
                     <div class="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform">
-                        <div class="w-14 h-14 rounded-full overflow-hidden">
-                            <img src="/html/image/cat_wired_light_hd.png" alt="WIRED" class="img-cat-light w-full h-full object-contain">
-                            <img src="/html/image/cat_wired_gold_hd.png" alt="WIRED" class="img-cat-gold w-full h-full object-contain">
+                        <div class="w-14 h-14 rounded-full overflow-hidden p-1 bg-[var(--surface-alt)] border border-[var(--b-color)]">
+                            <img src="/html/image/cat_wired_light_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="WIRED" class="img-cat-light w-full h-full object-contain">
+                            <img src="/html/image/cat_wired_gold_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="WIRED" class="img-cat-gold w-full h-full object-contain">
                         </div>
                         <span class="text-[10px] mt-2 font-bold tracking-wider text-[var(--text-main)]">WIRED</span>
                     </div>
                     <div class="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform">
-                        <div class="w-14 h-14 rounded-full overflow-hidden">
-                            <img src="/html/image/cat_speaker_light_hd.png" alt="SPEAKERS" class="img-cat-light w-full h-full object-contain">
-                            <img src="/html/image/cat_speaker_gold_hd.png" alt="SPEAKERS" class="img-cat-gold w-full h-full object-contain">
+                        <div class="w-14 h-14 rounded-full overflow-hidden p-1 bg-[var(--surface-alt)] border border-[var(--b-color)]">
+                            <img src="/html/image/cat_speaker_light_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="SPEAKERS" class="img-cat-light w-full h-full object-contain">
+                            <img src="/html/image/cat_speaker_gold_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="SPEAKERS" class="img-cat-gold w-full h-full object-contain">
                         </div>
                         <span class="text-[10px] mt-2 font-bold tracking-wider text-[var(--text-main)]">SPEAKERS</span>
                     </div>
@@ -117,8 +117,8 @@
                         <input type="radio" name="category" value="TWS" class="peer hidden" onchange="updateUIState()">
                         <div class="category-disc">
                             <!-- Nền Light: Trắng viền xám icon đen | Nền Gold: Đen viền vàng icon trắng/vàng -->
-                            <img src="/html/image/cat_tws_light_hd.png" alt="TWS" class="img-cat-light w-full h-full object-contain">
-                            <img src="/html/image/cat_tws_gold_hd.png" alt="TWS" class="img-cat-gold w-full h-full object-contain">
+                            <img src="/html/image/cat_tws_light_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="TWS" class="img-cat-light w-full h-full object-contain p-2.5">
+                            <img src="/html/image/cat_tws_gold_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="TWS" class="img-cat-gold w-full h-full object-contain p-2.5">
                         </div>
                         <span class="font-display font-bold text-xs tracking-wider uppercase text-[var(--text-heading)] group-hover:text-[var(--primary)] transition-colors">TWS</span>
                     </label>
@@ -127,8 +127,8 @@
                     <label class="flex flex-col items-center gap-2.5 cursor-pointer group">
                         <input type="radio" name="category" value="Wired" class="peer hidden" onchange="updateUIState()" checked>
                         <div class="category-disc">
-                            <img src="/html/image/cat_wired_light_hd.png" alt="WIRED" class="img-cat-light w-full h-full object-contain">
-                            <img src="/html/image/cat_wired_gold_hd.png" alt="WIRED" class="img-cat-gold w-full h-full object-contain">
+                            <img src="/html/image/cat_wired_light_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="WIRED" class="img-cat-light w-full h-full object-contain p-2.5">
+                            <img src="/html/image/cat_wired_gold_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="WIRED" class="img-cat-gold w-full h-full object-contain p-2.5">
                         </div>
                         <span class="font-display font-bold text-xs tracking-wider uppercase text-[var(--text-heading)] group-hover:text-[var(--primary)] transition-colors">WIRED</span>
                     </label>
@@ -137,8 +137,8 @@
                     <label class="flex flex-col items-center gap-2.5 cursor-pointer group">
                         <input type="radio" name="category" value="Speaker" class="peer hidden" onchange="updateUIState()">
                         <div class="category-disc">
-                            <img src="/html/image/cat_speaker_light_hd.png" alt="SPEAKERS" class="img-cat-light w-full h-full object-contain">
-                            <img src="/html/image/cat_speaker_gold_hd.png" alt="SPEAKERS" class="img-cat-gold w-full h-full object-contain">
+                            <img src="/html/image/cat_speaker_light_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="SPEAKERS" class="img-cat-light w-full h-full object-contain p-2.5">
+                            <img src="/html/image/cat_speaker_gold_hd.png" onerror="if(!this.dataset.fallback){this.dataset.fallback=1;this.src='image/' + this.src.split('/').pop();}" alt="SPEAKERS" class="img-cat-gold w-full h-full object-contain p-2.5">
                         </div>
                         <span class="font-display font-bold text-xs tracking-wider uppercase text-[var(--text-heading)] group-hover:text-[var(--primary)] transition-colors">SPEAKERS</span>
                     </label>
