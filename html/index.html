@@ -25,6 +25,13 @@
             height: 0 !important;
         }
 
+        /* Force single category icon according to active theme */
+        .img-cat-light { display: block !important; }
+        .img-cat-gold { display: none !important; }
+
+        html.theme-gold .img-cat-light { display: none !important; }
+        html.theme-gold .img-cat-gold { display: block !important; }
+
         /* 1. Capsule Dock Container */
         #custom-scroll-dock {
             position: fixed;
@@ -631,11 +638,19 @@
         });
 
         function switchThemeEffect(btn) {
-            btn.classList.add("rotate-180");
-            setTimeout(() => btn.classList.remove("rotate-180"), 300);
+            if (btn) {
+                btn.classList.add("rotate-180");
+                setTimeout(() => btn.classList.remove("rotate-180"), 300);
+            }
             const isGold = document.documentElement.classList.toggle("theme-gold");
+            if (isGold) {
+                document.documentElement.classList.remove("theme-light");
+            } else {
+                document.documentElement.classList.add("theme-light");
+            }
             localStorage.setItem('audiohub-theme', isGold ? 'gold' : 'light');
-            document.getElementById('theme-btn-icon').innerText = isGold ? '🌙' : '☀️';
+            const icon = document.getElementById('theme-btn-icon');
+            if (icon) icon.innerText = isGold ? '🌙' : '☀️';
             loadIntensityForCurrentTheme();
         }
 
@@ -896,10 +911,14 @@
             const savedTheme = localStorage.getItem('audiohub-theme');
             if (savedTheme === 'light') {
                 document.documentElement.classList.remove('theme-gold');
-                document.getElementById('theme-btn-icon').innerText = '☀️';
+                document.documentElement.classList.add('theme-light');
+                const icon = document.getElementById('theme-btn-icon');
+                if (icon) icon.innerText = '☀️';
             } else {
                 document.documentElement.classList.add('theme-gold');
-                document.getElementById('theme-btn-icon').innerText = '🌙';
+                document.documentElement.classList.remove('theme-light');
+                const icon = document.getElementById('theme-btn-icon');
+                if (icon) icon.innerText = '🌙';
             }
             loadIntensityForCurrentTheme();
             updateUIState();

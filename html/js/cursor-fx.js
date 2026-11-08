@@ -77,9 +77,13 @@
     }
 
     function checkTheme() {
+        const wasGold = isGoldTheme;
         isGoldTheme = document.documentElement.classList.contains('theme-gold') ||
-                      document.body.classList.contains('theme-gold') ||
-                      !document.documentElement.classList.contains('theme-light');
+                      document.body.classList.contains('theme-gold');
+        if (wasGold !== isGoldTheme) {
+            particles = [];
+            ripples = [];
+        }
     }
 
     function resize() {
