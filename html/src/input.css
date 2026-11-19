@@ -499,3 +499,41 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* LIQUID GLASS THEME TOKENS & UTILITIES                                  */
+/* ═══════════════════════════════════════════════════════════════════════ */
+@layer base {
+  html.liquid-obsidian {
+    --bg-body: #030508;
+    --surface-glass: rgba(14, 19, 32, 0.65);
+    --surface-glass-card: rgba(18, 24, 40, 0.55);
+    --surface-hover: rgba(28, 38, 64, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-border-hover: rgba(0, 242, 254, 0.45);
+    --glass-rim-top: rgba(255, 255, 255, 0.45);
+    --text-heading: #FFFFFF;
+    --text-main: #E2E8F0;
+    --text-sub: #94A3B8;
+    --primary-cyan: #00F2FE;
+    --primary-violet: #8A2BE2;
+    --primary-amber: #FFB74D;
+  }
+
+  html.liquid-crystal {
+    --bg-body: #F4F7FC;
+    --surface-glass: rgba(255, 255, 255, 0.78);
+    --surface-glass-card: rgba(255, 255, 255, 0.90);
+    --surface-hover: rgba(235, 242, 254, 0.95);
+    --glass-border: rgba(203, 213, 225, 0.85);
+    --glass-border-hover: rgba(2, 132, 199, 0.85);
+    --glass-rim-top: #FFFFFF;
+    --text-heading: #0F172A;
+    --text-main: #1E293B;
+    --text-sub: #475569;
+    --primary-cyan: #0284C7;
+    --primary-violet: #6366F1;
+    --primary-amber: #D97706;
+  }
+}
