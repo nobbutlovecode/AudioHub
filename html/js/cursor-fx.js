@@ -1,8 +1,7 @@
 /**
- * AudioHub Cursor Interaction Engine (v2.5)
- * Based on Design System Spec Section 3: Cursor Interaction with Background
- * - Black Gold: Gold Glow follows cursor (250-500ms smooth lerp) + Floating Stardust Particles + Ambient Mesh Shift
- * - Clean Light: Soft Circular Glow follows cursor (200-400ms smooth lerp) + Subtle Expanding Ripple
+ * AudioHub Cursor Interaction Engine (v2.6)
+ * - Black Gold: Gold Glow follows cursor + Floating Stardust Particles
+ * - Clean Light: Google Antigravity Interactive Colorful Particle Field (Red/Cyan/Violet/Amber Capsule Dashes & Fluid Repulsion)
  */
 
 (function() {
@@ -13,15 +12,28 @@
     let isMoving = false;
     let moveTimeout;
     let particles = [];
-    let ripples = [];
+    let antigravityParticles = [];
     let lastSpawn = 0;
-    let isGoldTheme = true;
+    let isGoldTheme = false;
 
-    // Mode options: 'glow', 'particles', 'combined'
+    // Palette matching Google Antigravity Clean Light landing page
+    const antigravityColors = [
+        '#E05D52', // Warm coral red
+        '#EA4335', // Google Red
+        '#E8715A', // Coral
+        '#F49342', // Warm amber
+        '#4285F4', // Google Blue
+        '#38BDF8', // Cyan / Sky Blue
+        '#6366F1', // Indigo
+        '#8B5CF6', // Violet
+        '#A855F7', // Purple
+        '#EC4899', // Pink
+        '#94A3B8'  // Subtle slate dot
+    ];
+
     window.cursorFxMode = 'combined';
 
     function init() {
-        // Create canvas if not already present
         canvas = document.getElementById('cursor-bg-canvas');
         if (!canvas) {
             canvas = document.createElement('canvas');
@@ -40,7 +52,6 @@
         resize();
         window.addEventListener('resize', resize, { passive: true });
 
-        // Mouse tracking
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
@@ -49,13 +60,12 @@
             moveTimeout = setTimeout(() => { isMoving = false; }, 150);
 
             const now = performance.now();
-            if (now - lastSpawn > 35) { // 28-30 particles/sec
+            if (now - lastSpawn > 35) {
                 lastSpawn = now;
-                spawnEffect(mouseX, mouseY);
+                spawnGoldParticles(mouseX, mouseY);
             }
         }, { passive: true });
 
-        // Touch handling
         window.addEventListener('touchmove', (e) => {
             if (e.touches.length > 0) {
                 mouseX = e.touches[0].clientX;
@@ -73,16 +83,17 @@
         const observer = new MutationObserver(checkTheme);
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
+        initAntigravityField();
         requestAnimationFrame(render);
     }
 
     function checkTheme() {
         const wasGold = isGoldTheme;
         isGoldTheme = document.documentElement.classList.contains('theme-gold') ||
-                      document.body.classList.contains('theme-gold');
+                      document.body.classList.contains('theme-gold') ||
+                      document.documentElement.classList.contains('liquid-obsidian');
         if (wasGold !== isGoldTheme) {
             particles = [];
-            ripples = [];
         }
     }
 
@@ -90,37 +101,53 @@
         width = window.innerWidth;
         height = window.innerHeight;
         if (canvas) {
-            canvas.width = width * window.devicePixelRatio;
-            canvas.height = height * window.devicePixelRatio;
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+        initAntigravityField();
+    }
+
+    function initAntigravityField() {
+        antigravityParticles = [];
+        const count = 180;
+        for (let i = 0; i < count; i++) {
+            const x = Math.random() * (width || window.innerWidth);
+            const y = Math.random() * (height || window.innerHeight);
+            antigravityParticles.push({
+                x: x,
+                y: y,
+                originX: x,
+                originY: y,
+                length: Math.random() * 5 + 3,
+                thickness: Math.random() * 2 + 1.2,
+                angle: (Math.random() - 0.5) * 0.8 - Math.PI / 4,
+                color: antigravityColors[Math.floor(Math.random() * antigravityColors.length)],
+                alpha: Math.random() * 0.45 + 0.45,
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: (Math.random() - 0.5) * 0.35,
+                offsetX: 0,
+                offsetY: 0,
+                offsetVx: 0,
+                offsetVy: 0,
+                currentAngle: 0
+            });
         }
     }
 
-    function spawnEffect(x, y) {
+    function spawnGoldParticles(x, y) {
+        if (!isGoldTheme) return;
         if (window.cursorFxMode === 'glow') return;
-
-        if (isGoldTheme) {
-            // Spawn 1-2 delicate golden stardust particles
-            for (let i = 0; i < 2; i++) {
-                particles.push({
-                    x: x + (Math.random() - 0.5) * 12,
-                    y: y + (Math.random() - 0.5) * 12,
-                    vx: (Math.random() - 0.5) * 0.8,
-                    vy: (Math.random() - 0.5) * 0.8 - 0.3, // slight upward float
-                    size: Math.random() * 2.2 + 1.2,
-                    alpha: 0.85,
-                    decay: Math.random() * 0.02 + 0.022 // 400-500ms lifespan
-                });
-            }
-        } else {
-            // Spawn subtle ripple
-            ripples.push({
-                x: x,
-                y: y,
-                radius: 4,
-                maxRadius: Math.random() * 25 + 35,
-                alpha: 0.22,
-                decay: 0.012
+        for (let i = 0; i < 2; i++) {
+            particles.push({
+                x: x + (Math.random() - 0.5) * 12,
+                y: y + (Math.random() - 0.5) * 12,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8 - 0.3,
+                size: Math.random() * 2.2 + 1.2,
+                alpha: 0.85,
+                decay: Math.random() * 0.02 + 0.022
             });
         }
     }
@@ -128,7 +155,6 @@
     function render() {
         ctx.clearRect(0, 0, width, height);
 
-        // Smooth cursor lerp (250-400ms physical damping)
         if (cursorX === -1000) {
             cursorX = mouseX;
             cursorY = mouseY;
@@ -139,23 +165,14 @@
 
         const mode = window.cursorFxMode || 'combined';
 
-        // 1. CURSOR GLOW
-        if ((mode === 'glow' || mode === 'combined') && cursorX > -200 && cursorX < width + 200) {
-            const glowRadius = isGoldTheme ? 380 : 320;
+        // 1. CURSOR GLOW FOR GOLD THEME
+        if (isGoldTheme && (mode === 'glow' || mode === 'combined') && cursorX > -200 && cursorX < width + 200) {
+            const glowRadius = 380;
             const grad = ctx.createRadialGradient(cursorX, cursorY, 0, cursorX, cursorY, glowRadius);
-
-            if (isGoldTheme) {
-                // Gold glow: warm, soft, non-intrusive
-                grad.addColorStop(0, 'rgba(212, 175, 55, 0.12)');
-                grad.addColorStop(0.35, 'rgba(186, 144, 38, 0.045)');
-                grad.addColorStop(0.7, 'rgba(140, 106, 18, 0.015)');
-                grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            } else {
-                // Clean Light: soft slate circular aura
-                grad.addColorStop(0, 'rgba(15, 23, 42, 0.04)');
-                grad.addColorStop(0.45, 'rgba(15, 23, 42, 0.012)');
-                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            }
+            grad.addColorStop(0, 'rgba(212, 175, 55, 0.12)');
+            grad.addColorStop(0.35, 'rgba(186, 144, 38, 0.045)');
+            grad.addColorStop(0.7, 'rgba(140, 106, 18, 0.015)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.fillStyle = grad;
             ctx.beginPath();
@@ -163,7 +180,7 @@
             ctx.fill();
         }
 
-        // 2. PARTICLES TRAIL (Black Gold)
+        // 2. GOLD PARTICLES TRAIL
         if (isGoldTheme && (mode === 'particles' || mode === 'combined')) {
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
@@ -187,23 +204,59 @@
             }
         }
 
-        // 3. RIPPLES (Clean Light)
-        if (!isGoldTheme && (mode === 'particles' || mode === 'combined')) {
-            for (let i = ripples.length - 1; i >= 0; i--) {
-                const r = ripples[i];
-                r.radius += (r.maxRadius - r.radius) * 0.1;
-                r.alpha -= r.decay;
+        // 3. CLEAN LIGHT: GOOGLE ANTIGRAVITY PARTICLE FIELD WITH CURSOR REPULSION
+        if (!isGoldTheme) {
+            const influenceRadius = 160;
+            for (let i = 0; i < antigravityParticles.length; i++) {
+                const p = antigravityParticles[i];
+                p.originX += p.vx;
+                p.originY += p.vy;
 
-                if (r.alpha <= 0 || r.radius >= r.maxRadius - 1) {
-                    ripples.splice(i, 1);
-                    continue;
+                if (p.originX < -20) p.originX = width + 20;
+                if (p.originX > width + 20) p.originX = -20;
+                if (p.originY < -20) p.originY = height + 20;
+                if (p.originY > height + 20) p.originY = -20;
+
+                const dx = (p.originX + p.offsetX) - cursorX;
+                const dy = (p.originY + p.offsetY) - cursorY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < influenceRadius && dist > 0.001) {
+                    const force = (1 - dist / influenceRadius);
+                    const pushPower = force * 6.5;
+                    const angle = Math.atan2(dy, dx);
+                    p.offsetVx += Math.cos(angle) * pushPower;
+                    p.offsetVy += Math.sin(angle) * pushPower;
+                    p.currentAngle = angle;
+                } else {
+                    p.currentAngle = p.angle;
                 }
 
-                ctx.strokeStyle = 'rgba(15, 23, 42, ' + r.alpha + ')';
-                ctx.lineWidth = 1.2;
+                p.offsetX += p.offsetVx;
+                p.offsetY += p.offsetVy;
+                p.offsetVx *= 0.88;
+                p.offsetVy *= 0.88;
+                p.offsetX *= 0.92;
+                p.offsetY *= 0.92;
+
+                const posX = p.originX + p.offsetX;
+                const posY = p.originY + p.offsetY;
+
+                ctx.save();
+                ctx.translate(posX, posY);
+                ctx.rotate(p.currentAngle || p.angle);
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+
                 ctx.beginPath();
-                ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-                ctx.stroke();
+                const r = p.thickness / 2;
+                const l = p.length;
+                ctx.arc(-l / 2 + r, 0, r, Math.PI / 2, Math.PI * 1.5);
+                ctx.arc(l / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
             }
         }
 
