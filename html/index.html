@@ -145,45 +145,59 @@
         opacity: 0.85;
       }
 
-      /* Sculpted Liquid Glass Pill Button */
+      /* Clean Minimal Pill Button (No heavy bevel gloss, bright vibrant modern tones) */
       .btn-liquid-primary {
-        background: linear-gradient(135deg, rgba(0, 242, 254, 0.85) 0%, rgba(79, 172, 254, 0.9) 45%, rgba(127, 0, 255, 0.85) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.45);
-        box-shadow: inset 0 1.5px 2px rgba(255, 255, 255, 0.7), inset 0 -1.5px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -4px rgba(0, 242, 254, 0.45);
+        background: #0284C7;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
         border-radius: 9999px;
         color: #FFFFFF;
         font-weight: 700;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        text-shadow: none;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       }
       .btn-liquid-primary:hover {
-        transform: translateY(-1.5px) scale(1.015);
-        box-shadow: inset 0 1.5px 2px rgba(255, 255, 255, 0.9), 0 14px 40px -3px rgba(0, 242, 254, 0.65);
+        background: #0EA5E9;
+        transform: translateY(-1.5px);
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
       }
       .btn-liquid-primary:active {
         transform: translateY(1px) scale(0.985);
+        box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
       }
 
-      /* Secondary Glass Pill */
+      /* Secondary Clean Pill */
       .btn-liquid-secondary {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3), 0 4px 15px rgba(0, 0, 0, 0.25);
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
         border-radius: 9999px;
-        color: var(--text-heading);
+        color: #0F172A;
         font-weight: 600;
         transition: all 0.2s ease;
       }
+      html:not(.liquid-crystal) .btn-liquid-secondary {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        color: #FFFFFF;
+      }
       html.liquid-crystal .btn-liquid-secondary {
-        background: rgba(255, 255, 255, 0.85);
-        box-shadow: inset 0 1px 1px #FFFFFF, 0 3px 10px rgba(15, 23, 42, 0.08);
+        background: #FFFFFF;
+        border-color: #E2E8F0;
+        color: #0F172A;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
       }
       .btn-liquid-secondary:hover {
-        background: var(--surface-hover);
-        border-color: var(--glass-border-hover);
+        background: #F8FAFC;
+        border-color: #CBD5E1;
         transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      }
+      html:not(.liquid-crystal) .btn-liquid-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
       }
 
       /* Glass Orb Category Selector — PURE BORDERLESS (NO GOLD/YELLOW RING) */
@@ -1119,73 +1133,183 @@
         window.addEventListener('scroll', updateCapsuleScroll, { passive: true });
         window.addEventListener('resize', updateCapsuleScroll, { passive: true });
 
-        // Optical Caustics Cursor Ray Canvas Simulation
-        (function initLiquidCursor() {
+        // Google Antigravity Particle Field Cursor Simulation
+        (function initAntigravityCursor() {
             const canvas = document.getElementById('liquid-cursor-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            let w = canvas.width = window.innerWidth;
-            let h = canvas.height = window.innerHeight;
-            let mx = -100, my = -100;
-            let cx = -100, cy = -100;
-            let rays = [];
+            let w, h;
+            let mx = -1000, my = -1000;
+            let cx = -1000, cy = -1000;
+            const particles = [];
+            const particleCount = 200;
+
+            // Palette matching Google Antigravity Clean Light landing page:
+            // Coral Red, Vibrant Cyan/Sky Blue, Deep Violet/Indigo, Amber Orange, Rose Pink
+            const colors = [
+                '#E05D52', // Warm coral red
+                '#EA4335', // Google Red
+                '#E8715A', // Coral
+                '#F49342', // Warm amber / orange
+                '#4285F4', // Google Blue
+                '#38BDF8', // Cyan / Sky Blue
+                '#6366F1', // Indigo
+                '#8B5CF6', // Violet
+                '#A855F7', // Purple
+                '#EC4899', // Pink
+                '#94A3B8'  // Subtle slate dot
+            ];
+
+            function resize() {
+                const dpr = window.devicePixelRatio || 1;
+                w = window.innerWidth;
+                h = window.innerHeight;
+                canvas.width = w * dpr;
+                canvas.height = h * dpr;
+                ctx.scale(dpr, dpr);
+            }
+
+            class Particle {
+                constructor() {
+                    this.init(true);
+                }
+                init(randomInitial = false) {
+                    this.x = Math.random() * (w || window.innerWidth);
+                    this.y = Math.random() * (h || window.innerHeight);
+                    this.originX = this.x;
+                    this.originY = this.y;
+
+                    // Dash/streak geometry like Antigravity home
+                    this.length = Math.random() * 5 + 3; // 3-8px length
+                    this.thickness = Math.random() * 2 + 1.2; // 1.2-3px width
+                    this.angle = (Math.random() - 0.5) * 0.8 - Math.PI / 4; // slight diagonal flow
+
+                    this.color = colors[Math.floor(Math.random() * colors.length)];
+                    this.baseAlpha = Math.random() * 0.45 + 0.45; // 0.45 - 0.9 opacity (bright and clear)
+                    this.alpha = this.baseAlpha;
+
+                    // Gentle ambient organic float
+                    this.vx = (Math.random() - 0.5) * 0.35;
+                    this.vy = (Math.random() - 0.5) * 0.35;
+
+                    // Repulsion displacement offset
+                    this.offsetX = 0;
+                    this.offsetY = 0;
+                    this.offsetVx = 0;
+                    this.offsetVy = 0;
+                }
+                update() {
+                    // Ambient drift
+                    this.originX += this.vx;
+                    this.originY += this.vy;
+
+                    // Screen wrap for origin
+                    if (this.originX < -20) this.originX = w + 20;
+                    if (this.originX > w + 20) this.originX = -20;
+                    if (this.originY < -20) this.originY = h + 20;
+                    if (this.originY > h + 20) this.originY = -20;
+
+                    // Cursor interaction: fluid repulsion and flow displacement
+                    const curX = cx;
+                    const curY = cy;
+                    const dx = (this.originX + this.offsetX) - curX;
+                    const dy = (this.originY + this.offsetY) - curY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const influenceRadius = 160;
+
+                    if (dist < influenceRadius && dist > 0.001) {
+                        const force = (1 - dist / influenceRadius);
+                        const pushPower = force * 6.5;
+                        const angle = Math.atan2(dy, dx);
+                        
+                        // Push outward along vector
+                        this.offsetVx += Math.cos(angle) * pushPower;
+                        this.offsetVy += Math.sin(angle) * pushPower;
+
+                        // Slightly align particle angle with flow
+                        this.currentAngle = angle;
+                    } else {
+                        this.currentAngle = this.angle;
+                    }
+
+                    // Physics damping (spring back to home origin position)
+                    this.offsetX += this.offsetVx;
+                    this.offsetY += this.offsetVy;
+                    this.offsetVx *= 0.88;
+                    this.offsetVy *= 0.88;
+                    this.offsetX *= 0.92;
+                    this.offsetY *= 0.92;
+                }
+                draw() {
+                    const posX = this.originX + this.offsetX;
+                    const posY = this.originY + this.offsetY;
+
+                    ctx.save();
+                    ctx.translate(posX, posY);
+                    ctx.rotate(this.currentAngle || this.angle);
+
+                    ctx.globalAlpha = this.alpha;
+                    ctx.fillStyle = this.color;
+
+                    // Draw capsule dash (pill/dash shape like Antigravity landing page)
+                    ctx.beginPath();
+                    const r = this.thickness / 2;
+                    const l = this.length;
+                    ctx.arc(-l / 2 + r, 0, r, Math.PI / 2, Math.PI * 1.5);
+                    ctx.arc(l / 2 - r, 0, r, -Math.PI / 2, Math.PI / 2);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.restore();
+                }
+            }
+
+            function initSystem() {
+                resize();
+                particles.length = 0;
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
 
             window.addEventListener('resize', () => {
-                w = canvas.width = window.innerWidth;
-                h = canvas.height = window.innerHeight;
-            });
+                resize();
+            }, { passive: true });
 
             window.addEventListener('mousemove', (e) => {
                 mx = e.clientX;
                 my = e.clientY;
-                if (Math.random() < 0.3) {
-                    rays.push({
-                        x: mx + (Math.random() - 0.5) * 40,
-                        y: my + (Math.random() - 0.5) * 40,
-                        radius: Math.random() * 55 + 20,
-                        hue: Math.random() > 0.5 ? 188 : 275,
-                        alpha: 0.3,
-                        life: 1
-                    });
-                }
+            }, { passive: true });
+
+            window.addEventListener('mouseleave', () => {
+                mx = -1000;
+                my = -1000;
             });
 
-            function draw() {
+            function render() {
                 ctx.clearRect(0, 0, w, h);
-                cx += (mx - cx) * 0.12;
-                cy += (my - cy) * 0.12;
 
-                // Subtle fluid caustic glow
-                if (cx > 0) {
-                    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 140);
-                    grad.addColorStop(0, 'rgba(0, 242, 254, 0.12)');
-                    grad.addColorStop(0.5, 'rgba(127, 0, 255, 0.06)');
-                    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                    ctx.fillStyle = grad;
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, 140, 0, Math.PI * 2);
-                    ctx.fill();
+                // Smooth cursor lerp
+                if (cx === -1000) {
+                    cx = mx;
+                    cy = my;
+                } else {
+                    cx += (mx - cx) * 0.15;
+                    cy += (my - cy) * 0.15;
                 }
 
-                // Ray particles
-                for (let i = rays.length - 1; i >= 0; i--) {
-                    const r = rays[i];
-                    r.life -= 0.02;
-                    if (r.life <= 0) {
-                        rays.splice(i, 1);
-                        continue;
-                    }
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = `hsla(${r.hue}, 95%, 60%, ${r.alpha * r.life})`;
-                    ctx.filter = 'blur(12px)';
-                    ctx.fill();
-                    ctx.restore();
+                // Render all particles
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.update();
+                    p.draw();
                 }
-                requestAnimationFrame(draw);
+
+                requestAnimationFrame(render);
             }
-            draw();
+
+            initSystem();
+            render();
         })();
 
         // Initialize state
